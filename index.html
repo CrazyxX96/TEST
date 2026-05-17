@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Bingo"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Bingo App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  /* Fallback falls Google Fonts nicht laden */
+  :root {
+    --font-head: "Bebas Neue", "Arial Narrow", Arial, sans-serif;
+    --font-body: "Nunito", "Segoe UI", Arial, sans-serif;
+  }
+</style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#eef1f7;--border:#d5dae8;
+  --accent:#1a6fd4;--accent2:#e63946;--green:#2a9d5c;
+  --text:#1a1f2e;--muted:#6b7491;--radius:14px;--nav-h:68px;
+  --font-head:"Bebas Neue",sans-serif;--font-body:"Nunito",sans-serif;
+}
+body.dark-mode{
+  --bg:#1a1f2e;--surface:#242938;--surface2:#2e3448;--border:#3a4060;
+  --text:#e8eaf6;--muted:#8892b0;
+}
+body.dark-mode .bingo-cell{background:#3a4060;border-color:#5a6080;}
+body.dark-mode .bingo-cell input{color:#e8eaf6;}
+body.dark-mode .ticket-mini-cell{background:#3a4060 !important;border-color:#5a6080 !important;color:#e8eaf6 !important;}
+body.dark-mode .num-btn{background:#3a4060;color:#e8eaf6;border-color:#5a6080;}
+body.dark-mode #app{box-shadow:0 0 40px rgba(0,0,0,.5);}
+body.dark-mode{background:#111520;}
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;display:none;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100dvh;width:100%;background:var(--bg);}
+#header{background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;width:100%;display:flex;justify-content:center;}
+#header > #header-inner{width:100%;}
+#header h1{font-family:var(--font-head);font-size:2rem;letter-spacing:3px;color:#2c394c;line-height:1;background:#8bc34a;padding:4px 10px;border-radius:6px;text-align:center;}
+#header p{font-size:.72rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+#header-inner{max-width:700px;width:100%;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+#pages{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;width:100%;scrollbar-width:none;background:#dde2ef;}
+body.dark-mode #pages{background:#0e1118;}
+#pages::-webkit-scrollbar{display:none;}
+.page{display:none;padding:16px 16px calc(var(--nav-h) + 16px);min-height:100%;animation:fadeIn .2s ease;width:100%;max-width:700px;margin:0 auto;}
+.page.active{display:block;}
+#nav{height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--font-body);font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;transition:color .2s;position:relative;padding-top:4px;}
+.nav-btn .icon{font-size:1.5rem;line-height:1;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn.active::before{content:"";position:absolute;top:0;left:20%;right:20%;height:3px;background:var(--accent);border-radius:0 0 4px 4px;}
+.section-title{font-family:var(--font-head);font-size:1.7rem;letter-spacing:2px;color:var(--accent);margin:0;}
+.page-title-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font-body);font-weight:800;font-size:.9rem;transition:transform .15s,opacity .2s;}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:#111;width:100%;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);width:100%;}
+.btn-success{background:var(--green);color:#111;width:100%;}
+.btn-danger{background:var(--accent2);color:#fff;}
+.field-label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;text-align:center;}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:.9rem;text-align:center;}
+.field-input:focus{outline:none;border-color:var(--accent);}
+.info-box{background:var(--surface2);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--muted);margin-bottom:16px;}
+.info-box strong{color:var(--text);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:12px;}
+.empty-state p{font-size:.88rem;line-height:1.6;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ERSTELLUNG */
+.bingo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+.bingo-col-header{text-align:center;font-family:var(--font-head);font-size:1.2rem;letter-spacing:2px;padding:4px;}
+.bingo-col-header{background:#2c394c;color:#ffffff;border-radius:6px;padding:0;display:flex;align-items:center;justify-content:center;aspect-ratio:1;}
+.bingo-cell{background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;aspect-ratio:1;}
+.bingo-cell input{width:100%;height:100%;background:none;border:none;text-align:center;color:var(--text);font-family:var(--font-body);font-weight:700;font-size:.9rem;cursor:pointer;}
+.bingo-cell input:focus{outline:2px solid var(--accent);border-radius:8px;}
+.bingo-cell input::-webkit-outer-spin-button,.bingo-cell input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.bingo-cell input[type=number]{-moz-appearance:textfield;}
+.bingo-cell.uncertain{background:rgba(255,107,107,.12);border-color:var(--accent2);}
+.bingo-cell.uncertain input{color:var(--accent2);}
+
+/* SCHEINE */
+.ticket-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:14px;}
+.ticket-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;overflow:hidden;}
+.ticket-card-header h3{font-family:var(--font-head);font-size:1.2rem;letter-spacing:1px;color:#2c394c;}
+.badge{font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:20px;background:var(--surface2);color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.badge.bingo{background:rgba(74,222,128,.15);color:var(--green);font-size:1rem;line-height:1;display:inline-flex;align-items:center;gap:1px;height:34px;padding:0 10px;border-radius:8px;}
+.badge.bingo span{display:inline-block;vertical-align:middle;font-size:1rem;line-height:1;}
+.ticket-card-body{padding:12px;border-top:0;overflow:visible;}
+.ticket-mini-grid{display:inline-grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+.ticket-mini-cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;background:var(--surface2);border:1px solid var(--border);color:var(--text);}
+.ticket-mini-cell.hit{background:#ffff00;border-color:#cccc00;color:#2c394c;}
+.ticket-mini-cell.bingo-line{background:#8bc34a;border-color:#6a9a35;color:#2c394c;}
+
+/* ZAHLEN */
+.last-drawn-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.last-drawn-bar .label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;white-space:nowrap;}
+.last-drawn-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.drawn-chip{font-size:.82rem;font-weight:800;padding:3px 10px;border-radius:20px;background:var(--surface2);color:var(--text);}
+.drawn-chip.newest{background:#9aa0b0;color:#1a1f2e;font-size:1rem;padding:4px 14px;}
+.bingo-num-table{width:100%;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+.bingo-num-header{display:grid;grid-template-columns:repeat(5,1fr);}
+.bnh{text-align:center;font-family:var(--font-head);font-size:1.5rem;letter-spacing:2px;padding:8px 4px;background:#2c394c;border-bottom:1px solid var(--border);}
+.bnh.b{color:#ffffff;}.bnh.i{color:#ffffff;}.bnh.n{color:#ffffff;}.bnh.g{color:#ffffff;}.bnh.o{color:#ffffff;}
+.bingo-num-body{display:grid;grid-template-columns:repeat(5,1fr);}
+.num-btn{height:38px;border:none;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--font-body);font-weight:800;font-size:.88rem;cursor:pointer;transition:transform .12s,background .15s;display:flex;align-items:center;justify-content:center;}
+.num-btn:active{transform:scale(.9);}
+.num-btn.last-col{border-right:none;}
+.num-btn.drawn{color:#2c394c;}
+.num-btn.drawn.b{background:#ffff00;color:#2c394c;}.num-btn.drawn.i{background:#ffff00;color:#2c394c;}.num-btn.drawn.n{background:#ffff00;color:#2c394c;}.num-btn.drawn.g{background:#ffff00;color:#2c394c;}.num-btn.drawn.o{background:#ffff00;color:#2c394c;}
+
+/* ÜBERSICHT */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 10px;text-align:center;}
+.stat-num{font-family:var(--font-head);font-size:2.2rem;line-height:1;color:var(--accent);}
+.stat-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;font-weight:700;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.drawn-sequence{display:flex;flex-wrap:wrap;gap:6px;}
+.seq-chip{font-size:.8rem;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.seq-chip .order{font-size:.6rem;color:var(--muted);vertical-align:super;}
+.winner-item{display:block;padding:10px 14px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);border-radius:10px;margin-bottom:8px;}
+.winner-item .trophy{font-size:1.4rem;}
+.winner-item .winner-name{font-weight:800;color:var(--green);}
+.winner-item .winner-sub{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
+/* BINGO POPUP */
+.bingo-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity var(--fade-speed,.25s);}
+.bingo-popup-overlay.visible{opacity:1;pointer-events:auto;}
+.bingo-popup{background:var(--surface);border:2px solid var(--green);box-shadow:0 8px 40px rgba(0,0,0,.15);border-radius:var(--radius);padding:32px 24px;width:100%;max-width:340px;text-align:center;}
+.bingo-popup .bp-trophy{font-size:3.5rem;margin-bottom:12px;animation:bpbounce .6s ease infinite alternate;}
+@keyframes bpbounce{from{transform:scale(1)}to{transform:scale(1.15)}}
+.bingo-popup h2{font-family:var(--font-head);font-size:2rem;letter-spacing:2px;color:var(--green);margin-bottom:8px;}
+.bingo-popup p{color:var(--text);font-size:1rem;font-weight:700;margin-bottom:24px;line-height:1.5;}
+.bingo-popup button{background:var(--green);color:#111;font-family:var(--font-body);font-weight:800;font-size:1rem;padding:12px 40px;border:none;border-radius:10px;cursor:pointer;width:100%;}
+
+/* CONFIRM MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 20px;width:100%;max-width:340px;text-align:center;}
+.confirm-box h3{font-family:var(--font-head);font-size:1.4rem;color:var(--text);letter-spacing:1px;}
+.confirm-box p{color:var(--muted);font-size:.88rem;margin:8px 0 20px;line-height:1.5;}
+.confirm-box .confirm-actions{display:flex;gap:8px;}
+.confirm-box .confirm-actions button{flex:1;}
+
+/* EDIT BANNER */
+#edit-banner{display:none;background:rgba(245,197,66,.12);border:1px solid var(--accent);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:.82rem;color:var(--accent);font-weight:700;}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;width:calc(100% - 40px);max-width:440px;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.85rem;font-weight:700;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200;opacity:0;transition:opacity var(--fade-speed,.25s),transform var(--fade-speed,.25s);pointer-events:none;text-align:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.bingo-popup-overlay,.modal-overlay{transition:opacity var(--fade-speed,.25s);}
+body.slow-fade{--fade-speed:1.5s;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div id="app">
+  <div id="header">
+    <div id="header-inner">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div>
+          <h1 style="font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;color:#2c394c;background:none;padding:0;border-radius:0;white-space:nowrap;">Bingoscheine prüfen</h1>
+        </div>
+      </div>
+    </div>
+    <div id="hdr-stats-wrap" style="display:flex;gap:10px;align-items:center;">
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.3rem;color:#2c394c;line-height:1;" id="hdr-tickets">0</div>
+        <div style="font-size:1rem;" id="hdr-tickets-label">🎟️</div>
+      </div>
+      <div style="width:1px;height:28px;background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.3rem;color:#2c394c;line-height:1;" id="hdr-drawn">0</div>
+        <div style="font-size:1rem;" id="hdr-drawn-label">🔢</div>
+      </div>
+      <div style="width:1px;height:28px;background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.3rem;color:#2c394c;line-height:1;" id="hdr-bingos">0</div>
+        <div style="font-size:1rem;" id="hdr-bingos-label">🏆</div>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div id="pages">
+
+    <!-- ERSTELLUNG -->
+    <div class="page active" id="page-erstellung">
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">
+          Schein Automatisch erstellen
+          <button onclick="toggleAutoInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;">&#8505;</button>
+        </div>
+        <div id="auto-info-box" style="display:none;padding:10px 16px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--border);">
+          Lade ein Foto deines Bingo-Scheins hoch und lass die KI die Zahlen automatisch erkennen. Danach kannst du die erkannten Zahlen prüfen und korrigieren.
+        </div>
+        <div style="padding:16px;">
+          <input type="file" id="file-input" accept="image/*" style="display:none;"/>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button class="btn btn-secondary" style="flex:1;" id="photo-btn" onclick="handlePhotoClick()">&#128247; Foto vom Schein</button>
+            <button class="btn btn-secondary" style="flex:1;" id="analyze-btn" onclick="analyzeImageOrHint()">&#128269; KI-Erkennung</button>
+          </div>
+          <div id="preview-wrap" style="display:none;">
+            <img id="preview-img" src="" alt="Vorschau" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:180px;object-fit:contain;background:var(--surface2);"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:0;border-radius:var(--radius) var(--radius) 0 0;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">
+          Schein erstellen
+          <button onclick="toggleManualInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;">&#8505;</button>
+        </div>
+        <div id="manual-info-box" style="display:none;padding:10px 16px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--border);">
+          Trage die 25 Zahlen manuell in das Raster ein – die Spalten B, I, N, G, O haben feste Zahlenbereiche (B: 1–15, I: 16–30, N: 31–45, G: 46–60, O: 61–75). Vergib einen Namen, trage Datum, Serien- und Losnummer ein und speichere den Schein.
+        </div>
+        <div style="padding:16px;">
+        <div style="height:50px;"></div>
+        <div class="bingo-grid" id="bingo-input-grid" style="margin:0 50px;"></div>
+        <div style="height:60px;"></div>
+        <div id="edit-banner">&#9998; Bearbeitungsmodus &mdash; <span id="edit-banner-name" style="color:var(--muted);font-weight:400;"></span></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <label class="field-label">Name des Scheins</label>
+            <input class="field-input" type="text" id="ticket-name" placeholder="z.B. Schein 1"/>
+          </div>
+          <div style="flex:1;">
+            <label class="field-label">Datum der Sendung</label>
+            <input class="field-input" type="date" id="ticket-date" style="-webkit-appearance:none;appearance:none;"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <label class="field-label">Seriennummer</label>
+            <input class="field-input" type="number" id="ticket-serial" placeholder="z.B. 1234"/>
+          </div>
+          <div style="flex:1;">
+            <label class="field-label">Losnummer</label>
+            <input class="field-input" type="number" id="ticket-lot" placeholder="z.B. 12345"/>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-radius:0 0 var(--radius) var(--radius);border-top:none;">
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="flex:1;" id="clear-btn" onclick="handleClearClick()">🗑️ Leeren</button>
+          <button class="btn btn-secondary" style="flex:1;" id="save-btn" onclick="handleSaveClick()">&#128190; Speichern</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEINE -->
+    <div class="page" id="page-scheine">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">
+          Gespeicherte Scheine
+          <button onclick="toggleScheinInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;">&#8505;</button>
+        </div>
+        <div id="scheine-info-box" style="display:none;padding:10px 16px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--border);">
+          Hier siehst du alle gespeicherten Bingo-Scheine. Tippe auf ✏️ um einen Schein zu bearbeiten oder auf 🗑️ um ihn zu löschen. Gezogene Zahlen und Bingo-Treffer werden automatisch farblich markiert. Mit dem Sortier-Button kannst du die Scheine nach Name, Datum, Serien-, Losnummer oder Gewinn sortieren.
+        </div>
+        <div style="padding:16px;display:none;" id="scheine-buttons-area">
+          <div style="margin-bottom:8px;">
+            <button class="btn btn-secondary" style="width:100%;padding:8px 14px;font-size:.78rem;display:none;" id="delete-all-tickets-btn" onclick="deleteAllTickets()">🗑️ Alle l&ouml;schen</button>
+          </div>
+          <div style="margin-bottom:0;">
+            <button class="btn btn-secondary" style="width:100%;padding:8px 14px;font-size:.78rem;display:none;" id="sort-filter-btn" onclick="toggleFilterPanel()">&#127937; Sortieren &amp; Filtern <span id="filter-arrow">&#9660;</span></button>
+            <div id="filter-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:6px;">
+              <div style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Sortieren nach</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button onclick="setSortFilter('name','asc')" id="sort-name-asc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128279; Name A&#8211;Z</button>
+                <button onclick="setSortFilter('name','desc')" id="sort-name-desc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128279; Name Z&#8211;A</button>
+                <button onclick="setSortFilter('date','asc')" id="sort-date-asc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128197; Datum &#8593;</button>
+                <button onclick="setSortFilter('date','desc')" id="sort-date-desc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128197; Datum &#8595;</button>
+                <button onclick="setSortFilter('serial','asc')" id="sort-serial-asc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128290; Serie &#8593;</button>
+                <button onclick="setSortFilter('serial','desc')" id="sort-serial-desc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#128290; Serie &#8595;</button>
+                <button onclick="setSortFilter('lot','asc')" id="sort-lot-asc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#127922; Los &#8593;</button>
+                <button onclick="setSortFilter('lot','desc')" id="sort-lot-desc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#127922; Los &#8595;</button>
+                <button onclick="setSortFilter('bingo','asc')" id="sort-bingo-asc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#127942; Gewinn &#8593;</button>
+                <button onclick="setSortFilter('bingo','desc')" id="sort-bingo-desc" class="btn btn-secondary" style="font-size:.75rem;padding:6px 8px;">&#127942; Gewinn &#8595;</button>
+              </div>
+              <button onclick="resetSortFilter()" style="margin-top:8px;width:100%;background:none;border:none;font-size:.75rem;color:var(--muted);cursor:pointer;text-decoration:underline;">Sortierung zur&#252;cksetzen</button>
+            </div>
+          </div>
+        </div>
+        <div id="scheine-empty-state"></div>
+      </div>
+      <div id="tickets-list"></div>
+    </div>
+
+    <!-- ZAHLEN -->
+    <div class="page" id="page-zahlen">
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">
+          Zahlen ziehen
+          <button onclick="toggleZahlenInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;">&#8505;</button>
+        </div>
+        <div id="zahlen-info-box" style="display:none;padding:10px 16px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--border);">
+          Tippe auf eine Zahl um sie als gezogen zu markieren. Gezogene Zahlen und Bingo-Treffer werden farblich hervorgehoben (Farben anpassbar in den Einstellungen). Bingo-Treffer werden automatisch erkannt und angezeigt.
+        </div>
+        <div style="padding:16px;">
+          <button class="btn btn-secondary" style="width:100%;padding:8px 14px;font-size:.78rem;margin-bottom:12px;opacity:0.4;cursor:not-allowed;" id="delete-all-drawn-btn" onclick="deleteAllDrawn()">🗑️ Alle Zahlen löschen</button>
+          <div class="bingo-num-table">
+            <div class="bingo-num-header">
+              <div class="bnh b">B</div>
+              <div class="bnh i">I</div>
+              <div class="bnh n">N</div>
+              <div class="bnh g">G</div>
+              <div class="bnh o">O</div>
+            </div>
+            <div class="bingo-num-body" id="bingo-num-body"></div>
+          </div>
+          <div class="last-drawn-bar" id="last-drawn-bar" style="margin-top:12px;margin-bottom:0;">
+            <span class="label">Letzte:</span>
+            <div class="last-drawn-chips" id="last-drawn-chips">
+              <span style="color:var(--muted);font-size:.8rem;">Noch keine Zahlen gezogen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">
+          Serien- und Losnummer pr&uuml;fen
+          <button onclick="toggleSerialInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;">&#8505;</button>
+        </div>
+        <div id="serial-info-box" style="display:none;padding:10px 16px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--border);">
+          Trage Serien- und Losnummern ein. Alle gespeicherten Nummern werden automatisch mit deinen Scheinen abgeglichen.
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <div style="flex:1;">
+              <label class="field-label">Seriennummer</label>
+              <input class="field-input" type="number" id="check-serial" placeholder="z.B. 1234"/>
+            </div>
+            <div style="flex:1;">
+              <label class="field-label">Losnummer</label>
+              <input class="field-input" type="number" id="check-lot" placeholder="z.B. 12345"/>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="addSerialLotEntry()">&#128269; Pr&uuml;fen</button>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:12px;font-size:.78rem;padding:8px 14px;opacity:0.4;cursor:not-allowed;" id="delete-all-serial-btn" onclick="clearAllSerialLot()">🗑️ Alle Serien- und Losnummern l&ouml;schen</button>
+          <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>
+          <div id="serial-lot-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÜBERSICHT -->
+    <div class="page" id="page-uebersicht">
+      <!-- Statistik Karte - always first -->
+      <!-- FIX: margin-bottom changed from 16px to 0 to remove gap between stats and next card -->
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:0;" data-card-id="stats">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;margin:0;">📊 Statistik</div>
+        <div style="padding:16px;">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-num" id="stat-tickets">0</div><div class="stat-label">Scheine<br>gespeichert</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-drawn">0</div><div class="stat-label">Zahlen<br>gezogen</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-bingos">0</div><div class="stat-label">Bingos<br>gewonnen</div></div>
+          </div>
+          <div id="win-summary" style="display:none;background:var(--surface2);border:1px solid rgba(74,222,128,.35);border-radius:var(--radius);padding:12px 16px;margin-top:8px;"></div>
+        </div>
+      </div>
+      <!-- Dynamic ordered cards -->
+      <div id="uebersicht-cards-container"></div>
+    </div>
+
+    <!-- EINSTELLUNGEN -->
+    <div class="page" id="page-einstellungen">
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
+        <div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;margin:0;">&#9881;&#65039; Einstellungen</div>
+      </div>
+
+      <!-- 1. ALLGEMEIN -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">&#9881;&#65039; Allgemein</div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">📐 Größe der oberen Leiste</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="header-size-normal-opt">
+            <input type="radio" name="header-size-style" value="normal" onchange="setHeaderSize('normal')" style="accent-color:#2c394c;"> Normal
+          </label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="header-size-compact-opt">
+            <input type="radio" name="header-size-style" value="compact" onchange="setHeaderSize('compact')" style="accent-color:#2c394c;"> Kompakt
+          </label>
+        </div>
+
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">📐 Größe der unteren Navigationsleiste</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="nav-size-normal-opt">
+            <input type="radio" name="nav-size-style" value="normal" onchange="setNavSize('normal')" style="accent-color:#2c394c;"> Normal
+          </label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="nav-size-compact-opt">
+            <input type="radio" name="nav-size-style" value="compact" onchange="setNavSize('compact')" style="accent-color:#2c394c;"> Kompakt
+          </label>
+        </div>
+
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">📊 Statistik oben rechts</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;transition:border-color .2s;" id="hdr-label-off-opt"><input type="radio" name="hdr-label-style" value="off" onchange="setHeaderLabelStyle('off')" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;transition:border-color .2s;" id="hdr-label-text-opt"><input type="radio" name="hdr-label-style" value="text" onchange="setHeaderLabelStyle('text')" style="accent-color:#2c394c;"> 📝 Text</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;transition:border-color .2s;" id="hdr-label-emoji-opt"><input type="radio" name="hdr-label-style" value="emoji" onchange="setHeaderLabelStyle('emoji')" style="accent-color:#2c394c;"> 😊 Emoji</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🌙 Dark Mode</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="darkmode-off-opt"><input type="radio" name="darkmode-style" value="off" onchange="setDarkMode(false)" style="accent-color:#2c394c;"> ☀️ Hell</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="darkmode-on-opt"><input type="radio" name="darkmode-style" value="on" onchange="setDarkMode(true)" style="accent-color:#2c394c;"> 🌙 Dunkel</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:4px;">♿ Epilepsie-Modus</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;">Alle Meldungen, Popups und Hinweise blenden sich langsam ein und aus.</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="slowfade-off-opt"><input type="radio" name="slowfade-style" value="off" onchange="setSlowFade(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="slowfade-on-opt"><input type="radio" name="slowfade-style" value="on" onchange="setSlowFade(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🎉 Konfetti bei Bingo</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="confetti-off-opt"><input type="radio" name="confetti-style" value="off" onchange="saveConfettiSetting(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="confetti-on-opt"><input type="radio" name="confetti-style" value="on" onchange="saveConfettiSetting(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">💬 Pop-ups anzeigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="popups-off-opt"><input type="radio" name="popups-style" value="off" onchange="savePopupSetting(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="popups-on-opt"><input type="radio" name="popups-style" value="on" onchange="savePopupSetting(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">⏱️ Pop-up automatisch schließen</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:.82rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:7px;" id="popup-close-off-opt"><input type="radio" name="popup-close-style" value="0" onchange="savePopupAutoClose(0)" style="accent-color:#2c394c;"> Nie</label>
+          <label style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:.82rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:7px;" id="popup-close-3-opt"><input type="radio" name="popup-close-style" value="3" onchange="savePopupAutoClose(3)" style="accent-color:#2c394c;"> 3s</label>
+          <label style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:.82rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:7px;" id="popup-close-5-opt"><input type="radio" name="popup-close-style" value="5" onchange="savePopupAutoClose(5)" style="accent-color:#2c394c;"> 5s</label>
+          <label style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:.82rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:7px;" id="popup-close-10-opt"><input type="radio" name="popup-close-style" value="10" onchange="savePopupAutoClose(10)" style="accent-color:#2c394c;"> 10s</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🔔 Ton bei Bingo-Gewinn</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="sound-off-opt"><input type="radio" name="sound-style" value="off" onchange="saveSoundSetting(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="sound-on-opt"><input type="radio" name="sound-style" value="on" onchange="saveSoundSetting(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+      </div>
+
+      <!-- 2. KI-ERKENNUNG -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">🤖 KI-Erkennung</div>
+
+        <!-- Status -->
+        <div id="api-key-status" style="border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;font-weight:700;text-align:center;">
+          ❌ Kein API-Key — KI-Erkennung nicht verfügbar
+        </div>
+
+        <!-- Key eingeben -->
+        <label class="field-label" style="text-align:left;margin-bottom:6px;">Anthropic API-Key</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="field-input" type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="flex:1;text-align:left;font-family:monospace;font-size:.78rem;"/>
+          <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:1rem;" onclick="toggleApiKeyVisibility()">👁️</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="saveApiKey()">💾 Speichern</button>
+          <button class="btn btn-danger" style="flex:1;width:auto;" onclick="deleteApiKey()">🗑️ Löschen</button>
+        </div>
+
+        <!-- Anleitung -->
+        <div style="border-top:1px solid var(--border);padding-top:14px;">
+          <div style="font-size:.82rem;font-weight:700;margin-bottom:10px;">📖 So bekommst du einen API-Key</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;">
+              <strong>Schritt 1</strong><br>
+              Gehe auf <strong>console.anthropic.com</strong> und erstelle ein kostenloses Konto.
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;">
+              <strong>Schritt 2</strong><br>
+              Klicke oben links auf <strong>"API Keys"</strong> → dann auf <strong>"Create Key"</strong>. Gib dem Key einen Namen z.B. "Bingo App".
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;">
+              <strong>Schritt 3</strong><br>
+              Kopiere den Key (beginnt mit <strong>sk-ant-...</strong>) und füge ihn oben in das Eingabefeld ein. Dann auf <strong>"Speichern"</strong> tippen.
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;">
+              <strong>Schritt 4</strong><br>
+              Lade unter <strong>"Billing"</strong> ein kleines Guthaben auf (z.B. <strong>5€</strong>). Eine Schein-Erkennung kostet ca. <strong>0,002€</strong> — damit kannst du ~2.500 Scheine erkennen lassen.
+            </div>
+            <div style="background:rgba(42,157,92,.1);border:1px solid rgba(42,157,92,.3);border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;">
+              ✅ <strong>Dein Key bleibt privat</strong> — er wird nur lokal auf deinem Gerät gespeichert und nirgendwo übertragen. Jeder Nutzer braucht seinen eigenen Key.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ERSTELLEN -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">&#9999;&#65039; Erstellen</div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🔢 Schein-Name automatisch hochzählen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="autonumber-off-opt"><input type="radio" name="autonumber-style" value="off" onchange="saveAutoNumber(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="autonumber-on-opt"><input type="radio" name="autonumber-style" value="on" onchange="saveAutoNumber(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+      </div>
+
+      <!-- 3. SCHEINE -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">&#127903;&#65039; Scheine</div>
+        <label class="field-label" style="text-align:left;margin-bottom:8px;">Hintergrundfarbe Bingo-Treffer</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="color" id="setting-bingo-color" value="#8bc34a" oninput="applyBingoColor(this.value)" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+          <span id="setting-bingo-color-val" style="font-size:.85rem;color:var(--muted);font-family:monospace;">#8bc34a</span>
+          <div id="preview-bingo" style="width:36px;height:36px;border-radius:8px;background:#8bc34a;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:#2c394c;font-size:.85rem;">7</div>
+          <button onclick="resetBingoColor()" class="btn btn-secondary" style="padding:6px 12px;font-size:.75rem;margin-left:auto;">Zur&uuml;cksetzen</button>
+        </div>
+        <div style="margin-top:8px;">
+          <label class="field-label" style="text-align:left;">Transparenz: <span id="setting-bingo-opacity-val">0%</span></label>
+          <input type="range" id="setting-bingo-opacity" min="0" max="100" value="0" oninput="applyColorOpacity('bingo', this.value)" style="width:100%;margin-top:4px;accent-color:#2c394c;">
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <label class="field-label" style="text-align:left;margin-bottom:8px;">Hintergrundfarbe getroffene Zahlen</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="color" id="setting-hit-color" value="#ffff00" oninput="applyHitColor(this.value)" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+          <span id="setting-hit-color-val" style="font-size:.85rem;color:var(--muted);font-family:monospace;">#ffff00</span>
+          <div id="preview-hit" style="width:36px;height:36px;border-radius:8px;background:#ffff00;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:#2c394c;font-size:.85rem;">7</div>
+          <button onclick="resetHitColor()" class="btn btn-secondary" style="padding:6px 12px;font-size:.75rem;margin-left:auto;">Zur&uuml;cksetzen</button>
+        </div>
+        <div style="margin-top:8px;">
+          <label class="field-label" style="text-align:left;">Transparenz: <span id="setting-hit-opacity-val">0%</span></label>
+          <input type="range" id="setting-hit-opacity" min="0" max="100" value="0" oninput="applyColorOpacity('hit', this.value)" style="width:100%;margin-top:4px;accent-color:#2c394c;">
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <label class="field-label" style="text-align:left;margin-bottom:8px;">Farbe Bingo-Linie</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="color" id="setting-line-color" value="#db2523" oninput="applyLineColor(this.value)" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+          <span id="setting-line-color-val" style="font-size:.85rem;color:var(--muted);font-family:monospace;">#db2523</span>
+          <div style="flex:1;height:6px;border-radius:3px;background:#db2523;" id="preview-line"></div>
+          <button onclick="resetLineColor()" class="btn btn-secondary" style="padding:6px 12px;font-size:.75rem;margin-left:auto;">Zur&uuml;cksetzen</button>
+        </div>
+        <div style="margin-top:8px;">
+          <label class="field-label" style="text-align:left;">Transparenz: <span id="setting-line-opacity-val">0%</span></label>
+          <input type="range" id="setting-line-opacity" min="0" max="100" value="0" oninput="applyLineOpacity(this.value)" style="width:100%;margin-top:4px;accent-color:#2c394c;">
+        </div>
+        <div style="margin-top:8px;">
+          <label class="field-label" style="text-align:left;">Breite: <span id="setting-line-width-val">3px</span></label>
+          <input type="range" id="setting-line-width" min="1" max="10" value="3" oninput="applyLineWidth(this.value)" style="width:100%;margin-top:4px;accent-color:#2c394c;">
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">Mini-Raster Größe</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="minigrid-small-opt"><input type="radio" name="minigrid-style" value="small" onchange="saveMiniGridSize('small')" style="accent-color:#2c394c;"> Klein</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="minigrid-medium-opt"><input type="radio" name="minigrid-style" value="medium" onchange="saveMiniGridSize('medium')" style="accent-color:#2c394c;"> Mittel</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="minigrid-large-opt"><input type="radio" name="minigrid-style" value="large" onchange="saveMiniGridSize('large')" style="accent-color:#2c394c;"> Groß</label>
+        </div>
+      </div>
+
+      <!-- 4. ZAHLEN -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">&#128290; Zahlen</div>
+        <label class="field-label" style="text-align:left;margin-bottom:8px;">Hintergrundfarbe gezogene Zahlen</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="color" id="setting-drawn-color" value="#ffff00" oninput="applyDrawnColor(this.value)" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+          <span id="setting-drawn-color-val" style="font-size:.85rem;color:var(--muted);font-family:monospace;">#ffff00</span>
+          <div id="preview-drawn" style="width:36px;height:36px;border-radius:8px;background:#ffff00;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:#2c394c;font-size:.85rem;">7</div>
+          <button onclick="resetDrawnColor()" class="btn btn-secondary" style="padding:6px 12px;font-size:.75rem;margin-left:auto;">Zur&uuml;cksetzen</button>
+        </div>
+        <div style="margin-top:8px;">
+          <label class="field-label" style="text-align:left;">Transparenz: <span id="setting-drawn-opacity-val">0%</span></label>
+          <input type="range" id="setting-drawn-opacity" min="0" max="100" value="0" oninput="applyColorOpacity('drawn', this.value)" style="width:100%;margin-top:4px;accent-color:#2c394c;">
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">Maximale Anzahl ziehbarer Zahlen: <span id="max-draw-val">22</span></div>
+        <input type="range" id="setting-max-draw" min="1" max="75" value="22" oninput="saveMaxDraw(this.value)" style="width:100%;accent-color:#2c394c;">
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px;"><span>1</span><span>75</span></div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🔄 Auto-Navigation zur Übersicht nach letztem Zug</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="autonav-off-opt"><input type="radio" name="autonav-style" value="off" onchange="saveAutoNav(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="autonav-on-opt"><input type="radio" name="autonav-style" value="on" onchange="saveAutoNav(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">💬 Hinweise beim Ziehen anzeigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="toast-draw-off-opt"><input type="radio" name="toast-draw-style" value="off" onchange="saveToastDraw(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="toast-draw-on-opt"><input type="radio" name="toast-draw-style" value="on" onchange="saveToastDraw(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🕐 Zuletzt gezogene Zahlen anzeigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="last-drawn-off-opt"><input type="radio" name="last-drawn-style" value="off" onchange="toggleLastDrawn(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="last-drawn-on-opt"><input type="radio" name="last-drawn-style" value="on" onchange="toggleLastDrawn(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">✅ Jeden Klick mit OK bestätigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="confirm-draw-off-opt"><input type="radio" name="confirm-draw-style" value="off" onchange="saveConfirmDraw(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="confirm-draw-on-opt"><input type="radio" name="confirm-draw-style" value="on" onchange="saveConfirmDraw(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+      </div>
+
+      <!-- 5. ÜBERSICHT -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">&#128202; &Uuml;bersicht</div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🔢 Reihenfolge bei gezogenen Zahlen anzeigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="order-btn-off-opt"><input type="radio" name="order-btn-style" value="off" onchange="toggleOrderBtn(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="order-btn-on-opt"><input type="radio" name="order-btn-style" value="on" onchange="toggleOrderBtn(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🔀 Gezogene Zahlen sortieren</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="sort-btn-off-opt"><input type="radio" name="sort-btn-style" value="off" onchange="toggleSortBtn(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="sort-btn-on-opt"><input type="radio" name="sort-btn-style" value="on" onchange="toggleSortBtn(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">🏅 Gewinn-Zusammenfassung anzeigen</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="win-summary-off-opt"><input type="radio" name="win-summary-style" value="off" onchange="toggleWinSummary(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="win-summary-on-opt"><input type="radio" name="win-summary-style" value="on" onchange="toggleWinSummary(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:4px;">🏆 Sortieren (Gewinnübersicht)</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;">Wird nur angezeigt wenn mehr als 1 Schein gewonnen hat.</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="winner-sort-off-opt"><input type="radio" name="winner-sort-style" value="off" onchange="toggleWinnerSortBtn(false)" style="accent-color:#2c394c;"> Aus</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="winner-sort-on-opt"><input type="radio" name="winner-sort-style" value="on" onchange="toggleWinnerSortBtn(true)" style="accent-color:#2c394c;"> An</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">📐 Tabellengröße (Gewinnübersicht)</div>
+        <div style="display:flex;gap:8px;">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="winnergrid-small-opt"><input type="radio" name="winnergrid-style" value="small" onchange="saveWinnerGridSize('small')" style="accent-color:#2c394c;"> Klein</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="winnergrid-medium-opt"><input type="radio" name="winnergrid-style" value="medium" onchange="saveWinnerGridSize('medium')" style="accent-color:#2c394c;"> Mittel</label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px;" id="winnergrid-large-opt"><input type="radio" name="winnergrid-style" value="large" onchange="saveWinnerGridSize('large')" style="accent-color:#2c394c;"> Groß</label>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">📋 Reihenfolge der Karten</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px;">Reihenfolge der Karten auf der Übersichtsseite anpassen.</div>
+        <div id="uebersicht-order-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <!-- 7. SCREENSHOT -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">📸 Screenshot</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">Zur Übersichtsseite wechseln um einen Screenshot zu machen.</div>
+        <div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">Sichtbare Karten im Screenshot</div>
+        <div id="screenshot-cards-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+        <button class="btn btn-secondary" style="width:100%;" onclick="showScreenshotModal()">📸 Screenshot-Ansicht öffnen</button>
+      </div>
+
+      <!-- 7. DATENSPEICHERUNG -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">💾 Datenspeicherung</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;font-size:.82rem;line-height:1.7;">
+          <div style="margin-bottom:8px;">Alle Daten werden ausschließlich <strong>lokal auf diesem Gerät</strong> im Browser-Speicher (<em>localStorage</em>) gesichert.</div>
+          <div style="margin-bottom:8px;">Es werden <strong>keine Daten</strong> an einen Server übertragen oder in der Cloud gespeichert.</div>
+          <div>⚠️ Wenn du den Browser-Cache oder die Website-Daten löschst, gehen alle gespeicherten Scheine und Einstellungen <strong>unwiderruflich verloren</strong>.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;" id="storage-stats"></div>
+        <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:14px;" id="storage-path"></div>
+        <button class="btn btn-danger" style="width:100%;" onclick="resetAllData()">🗑️ Alle Daten zurücksetzen</button>
+      </div>
+
+      <!-- 8. SPENDEN -->
+      <div class="card">
+        <div style="font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;background:#2f55a4;color:#fff;padding:8px 14px;border-radius:8px;margin:-16px -16px 16px -16px;display:flex;align-items:center;gap:8px;">💝 Entwickler unterstützen</div>
+        <div style="text-align:center;padding:8px 0 16px;">
+          <div style="font-size:2.5rem;margin-bottom:8px;">🙏</div>
+          <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:6px;">Dir gefällt die App?</div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:16px;">Diese App wurde mit viel Liebe entwickelt und ist komplett kostenlos.<br>Über eine kleine Spende würde ich mich sehr freuen! ❤️</div>
+          <a href="https://paypal.me/Schnio96" target="_blank" rel="noopener"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#003087;color:#fff;font-family:var(--font-body);font-weight:800;font-size:1rem;padding:14px 28px;border-radius:12px;text-decoration:none;width:100%;box-sizing:border-box;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/></svg>
+            Mit PayPal spenden
+          </a>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:10px;">Jeder Betrag hilft — vielen Dank! 🎉</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /pages -->
+
+  <nav id="nav">
+    <div style="max-width:700px;margin:0 auto;display:flex;width:100%;height:100%;">
+    <button class="nav-btn active" onclick="navigate('erstellung',this)"><span class="icon">&#9999;&#65039;</span>Erstellen</button>
+    <button class="nav-btn" onclick="navigate('scheine',this)"><span class="icon">&#127903;&#65039;</span>Scheine</button>
+    <button class="nav-btn" onclick="navigate('zahlen',this)"><span class="icon">&#128290;</span>Zahlen</button>
+    <button class="nav-btn" onclick="navigate('uebersicht',this)"><span class="icon">&#128202;</span>&#220;bersicht</button>
+    <button class="nav-btn" onclick="navigate('einstellungen',this)"><span class="icon">&#9881;&#65039;</span>Einst.</button>
+    </div>
+  </nav>
+</div>
+
+<!-- Bingo Popup -->
+<div class="bingo-popup-overlay" id="bingo-popup-overlay">
+  <div class="bingo-popup">
+    <div class="bp-trophy" id="bp-trophy-icons">&#127942;</div>
+    <h2 id="bingo-popup-title">BINGO!</h2>
+    <p style="font-weight:800;font-size:1.1rem;margin-bottom:6px;">Herzlichen Glückwunsch!</p>
+    <p id="bingo-popup-text" style="font-weight:600;font-size:.9rem;color:var(--muted);margin-bottom:24px;line-height:1.8;white-space:pre-line;"></p>
+    <button onclick="closeBingoPopup()">OK</button>
+    <button onclick="closeBingoPopup(); navigate('uebersicht', document.querySelectorAll('.nav-btn')[3]);" style="background:none;border:1px solid var(--green);color:var(--green);font-family:var(--font-body);font-weight:700;font-size:.9rem;padding:10px 20px;border-radius:10px;cursor:pointer;width:100%;margin-top:10px;">Zur Übersichtsseite →</button>
+  </div>
+</div>
+
+<!-- Serien/Los Popup -->
+<div class="bingo-popup-overlay" id="serial-popup-overlay">
+  <div class="bingo-popup" style="border-color:#1a6fd4;">
+    <div class="bp-trophy" style="font-size:3.5rem;margin-bottom:12px;animation:bpbounce .6s ease infinite alternate;">&#127903;&#65039;</div>
+    <h2 style="color:#1a6fd4;">TREFFER!</h2>
+    <p style="font-weight:800;font-size:1.1rem;margin-bottom:6px;">Herzlichen Glückwunsch!</p>
+    <p id="serial-popup-text" style="font-weight:600;font-size:.9rem;color:var(--muted);margin-bottom:24px;line-height:1.5;"></p>
+    <button style="background:#1a6fd4;" onclick="closeSerialPopup()">OK</button>
+    <button onclick="closeSerialPopup(); navigate('uebersicht', document.querySelectorAll('.nav-btn')[3]);" style="background:none;border:1px solid #1a6fd4;color:#1a6fd4;font-family:var(--font-body);font-weight:700;font-size:.9rem;padding:10px 20px;border-radius:10px;cursor:pointer;width:100%;margin-top:10px;">Zur Übersichtsseite →</button>
+  </div>
+</div>
+
+<!-- KI Progress Modal -->
+<div class="modal-overlay" id="ki-progress-overlay" style="display:none;">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:12px;">🤖</div>
+    <div style="font-weight:800;font-size:1rem;margin-bottom:6px;">KI analysiert den Schein...</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:20px;" id="ki-progress-label">Bitte warten</div>
+    <div style="background:var(--surface2);border-radius:20px;height:12px;overflow:hidden;margin-bottom:8px;">
+      <div id="ki-progress-bar" style="height:100%;width:0%;background:#2c394c;border-radius:20px;transition:width .3s ease;"></div>
+    </div>
+    <div style="font-size:.85rem;font-weight:700;color:#2c394c;" id="ki-progress-pct">0%</div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <h3 id="confirm-title">&#9888; Sicher?</h3>
+    <p id="confirm-text"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" style="width:auto;" onclick="closeConfirm()">Abbrechen</button>
+      <button class="btn btn-danger" style="width:auto;" id="confirm-ok-btn">&#128465; L&ouml;schen</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+var tickets   = JSON.parse(localStorage.getItem("bingo_tickets") || "[]");
+var currentSortKey = null;
+var currentSortDir = null;
+var serialWinners = JSON.parse(localStorage.getItem("bingo_serial_winners") || "[]");
+var drawnNums = JSON.parse(localStorage.getItem("bingo_drawn")   || "[]");
+var currentImg = null;
+var editingId  = null;
+var COLS = ["B","I","N","G","O"];
+var COL_RANGES = [{min:1,max:15},{min:16,max:30},{min:31,max:45},{min:46,max:60},{min:61,max:75}];
+var BINGO_LINES = [
+  [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+  [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+  [0,6,12,18,24],[4,8,12,16,20]
+];
+
+// ── NAVIGATION ─────────────────────────────────────────
+function navigate(page, btn) {
+  document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+  document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+  document.getElementById("page-" + page).classList.add("active");
+  btn.classList.add("active");
+  document.getElementById("pages").scrollTop = 0;
+  var wrap = document.getElementById("hdr-stats-wrap");
+  if (wrap) {
+    if (page === "uebersicht") {
+      wrap.style.display = "none";
+    } else {
+      var showStats = localStorage.getItem("bingo_show_header_stats");
+      var visible = showStats === null ? true : showStats === "1";
+      wrap.style.display = visible ? "flex" : "none";
+    }
+  }
+  if (page === "erstellung") setTimeout(resizeBingoGrid, 50);
+  if (page === "scheine")    { renderScheine(); setTimeout(resizeMiniGrids, 50); }
+  if (page === "zahlen")     { buildNumbersGrid(); renderSerialLotList(); }
+  if (page === "uebersicht") { buildUebersichtCards(); renderUebersicht(); }
+  if (page === "einstellungen") { loadSettings(); renderOrderList(); applyScreenshotCheckboxes(); }
+}
+
+function navigateToTicket(ticketId) {
+  var btnScheine = document.querySelectorAll(".nav-btn")[1];
+  navigate("scheine", btnScheine);
+  setTimeout(function() {
+    var cards = document.querySelectorAll(".ticket-card");
+    var sorted = getSortedTickets();
+    var idx = sorted.findIndex(function(t){ return t.id === ticketId; });
+    if (idx >= 0 && cards[idx]) {
+      cards[idx].scrollIntoView({ behavior: "smooth", block: "center" });
+      cards[idx].style.transition = "box-shadow .3s";
+      cards[idx].style.boxShadow = "0 0 0 3px #2c394c";
+      setTimeout(function(){ cards[idx].style.boxShadow = ""; }, 1500);
+    }
+  }, 100);
+}
+
+// ── ERSTELLUNG INFO ────────────────────────────────────
+function toggleErstellungInfo() {
+  var box = document.getElementById("erstellung-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+function toggleAutoInfo() {
+  var box = document.getElementById("auto-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+function toggleManualInfo() {
+  var box = document.getElementById("manual-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+// ── ERSTELLUNG ─────────────────────────────────────────
+function resizeBingoGrid() {
+  var grid = document.getElementById("bingo-input-grid");
+  if (!grid) return;
+  var appEl = document.getElementById("app") || document.body;
+  var pageWidth = appEl.offsetWidth;
+  var pagePadding = 32 + 40;
+  var gridWidth = pageWidth - pagePadding;
+  if (gridWidth <= 0) { setTimeout(resizeBingoGrid, 100); return; }
+  var cellSize = Math.floor((gridWidth - 4 * 6) / 5);
+  cellSize = Math.max(36, Math.min(cellSize, 120));
+  grid.style.gridTemplateRows = "";
+  var cells = grid.querySelectorAll(".bingo-cell");
+  cells.forEach(function(c) {
+    c.style.height = "";
+    var inp = c.querySelector("input");
+    if (inp) inp.style.fontSize = Math.max(10, cellSize * 0.22) + "px";
+  });
+  var headers = grid.querySelectorAll(".bingo-col-header");
+  headers.forEach(function(h) {
+    h.style.height = "";
+    h.style.fontSize = Math.max(14, cellSize * 0.4) + "px";
+  });
+}
+
+function buildBingoInputGrid(values, confident) {
+  var grid = document.getElementById("bingo-input-grid");
+  grid.innerHTML = "";
+  COLS.forEach(function(c) {
+    var h = document.createElement("div");
+    h.className = "bingo-col-header";
+    h.textContent = c;
+    grid.appendChild(h);
+  });
+  for (var i = 0; i < 25; i++) {
+    var col = i % 5;
+    var range = COL_RANGES[col];
+    var cell = document.createElement("div");
+    cell.className = "bingo-cell" + (confident && confident[i] === false ? " uncertain" : "");
+    var inp = document.createElement("input");
+    inp.type = "number"; inp.min = range.min; inp.max = range.max;
+    inp.value = (values && values[i] !== undefined && values[i] !== "") ? values[i] : "";
+    inp.placeholder = range.min + "-" + range.max;
+    inp.addEventListener("input", (function(r){ return function(){
+      var v = parseInt(this.value);
+      if (this.value !== "" && (v < r.min || v > r.max)) this.style.color = "var(--accent2)";
+      else this.style.color = "";
+      checkGridValid();
+    };})(range));
+    inp.addEventListener("change", (function(r){ return function(){
+      var v = parseInt(this.value);
+      if (this.value !== "" && (v < r.min || v > r.max)) this.style.color = "var(--accent2)";
+      else this.style.color = "";
+      checkGridValid();
+    };})(range));
+    cell.appendChild(inp);
+    grid.appendChild(cell);
+  }
+  checkGridValid();
+}
+
+function handleSaveClick() {
+  var saveBtn = document.getElementById("save-btn");
+  if (saveBtn.dataset.canSave === "1") { saveTicket(); return; }
+  // Erklären warum nicht gespeichert werden kann
+  var inputs = document.querySelectorAll("#bingo-input-grid .bingo-cell input");
+  var emptyCount = 0, wrongCount = 0, vals = [];
+  inputs.forEach(function(inp, i) {
+    var v = parseInt(inp.value);
+    var col = i % 5;
+    var range = COL_RANGES[col];
+    if (!inp.value || isNaN(v)) { emptyCount++; }
+    else if (v < range.min || v > range.max) { wrongCount++; }
+    else vals.push(v);
+  });
+  var dupes = vals.filter(function(v, i, a){ return a.indexOf(v) !== i; });
+  if (emptyCount > 0) { showToast("⚠️ Noch " + emptyCount + " Feld" + (emptyCount === 1 ? " ist" : "er sind") + " leer."); }
+  else if (wrongCount > 0) { showToast("⚠️ " + wrongCount + " Zahl" + (wrongCount === 1 ? " ist" : "en sind") + " außerhalb des gültigen Bereichs."); }
+  else if (dupes.length > 0) { showToast("⚠️ Doppelte Zahlen: " + dupes.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(", ")); }
+  else { showToast("⚠️ Bitte alle 25 Felder korrekt ausfüllen."); }
+}
+
+function handleClearClick() {
+  var clearBtn = document.getElementById("clear-btn");
+  if (clearBtn.dataset.canClear === "1") { resetErstellung(); return; }
+  showToast("ℹ️ Es gibt nichts zu leeren.");
+}
+
+function checkGridValid() {
+  var inputs = document.querySelectorAll("#bingo-input-grid .bingo-cell input");
+  var saveBtn = document.getElementById("save-btn");
+  var clearBtn = document.getElementById("clear-btn");
+  if (!saveBtn || inputs.length === 0) return;
+
+  var anyFilled = false;
+  inputs.forEach(function(inp) { if (inp.value) anyFilled = true; });
+  var serial = document.getElementById("ticket-serial").value;
+  var lot = document.getElementById("ticket-lot").value;
+  var name = document.getElementById("ticket-name").value;
+  var defaultName = "Schein " + (tickets.length + (editingId ? 0 : 1));
+  if (serial || lot || anyFilled || (name && name !== defaultName)) anyFilled = true;
+  if (clearBtn) {
+    clearBtn.style.display = "inline-flex";
+    clearBtn.style.opacity = anyFilled ? "1" : "0.4";
+    clearBtn.style.cursor = anyFilled ? "pointer" : "not-allowed";
+    clearBtn.dataset.canClear = anyFilled ? "1" : "0";
+  }
+
+  var allValid = true;
+  var vals = [];
+  inputs.forEach(function(inp, i) {
+    var v = parseInt(inp.value);
+    var col = i % 5;
+    var range = COL_RANGES[col];
+    if (!inp.value || isNaN(v) || v < range.min || v > range.max) allValid = false;
+    else vals.push(v);
+  });
+  if (allValid && vals.length === 25) {
+    var unique = new Set(vals);
+    if (unique.size !== 25) allValid = false;
+  }
+  saveBtn.style.display = "inline-flex";
+  saveBtn.dataset.canSave = allValid ? "1" : "0";
+  if (allValid) {
+    var isDark = document.body.classList.contains("dark-mode");
+    saveBtn.style.cssText = "flex:1;display:inline-flex;align-items:center;justify-content:center;opacity:1;cursor:pointer;background:" + (isDark ? "#ffffff" : "#2c394c") + ";color:" + (isDark ? "#2c394c" : "#ffffff") + ";border:2px solid " + (isDark ? "#ffffff" : "#2c394c") + ";border-radius:8px;padding:8px;font-size:.85rem;font-weight:600;";
+  } else {
+    saveBtn.style.cssText = "flex:1;display:inline-flex;align-items:center;justify-content:center;opacity:0.4;cursor:not-allowed;background:var(--surface2);color:var(--text);border:2px solid var(--border);border-radius:8px;padding:8px;font-size:.85rem;font-weight:600;";
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  var d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  var dd = String(d.getDate()).padStart(2,"0");
+  var mm = String(d.getMonth()+1).padStart(2,"0");
+  var yyyy = d.getFullYear();
+  return dd + "." + mm + "." + yyyy;
+}
+
+function getSundayOfCurrentWeek() {
+  var today = new Date();
+  var day = today.getDay();
+  var diff = day === 0 ? 0 : 7 - day;
+  var sunday = new Date(today);
+  sunday.setDate(today.getDate() + diff);
+  return sunday.toISOString().split("T")[0];
+}
+
+function resetErstellung() {
+  document.getElementById("file-input").value    = "";
+  document.getElementById("ticket-serial").value = "";
+  document.getElementById("ticket-lot").value    = "";
+  document.getElementById("ticket-date").value   = getSundayOfCurrentWeek();
+  document.getElementById("preview-wrap").style.display  = "none";
+  var _ab=document.getElementById("analyze-btn");_ab.style.opacity="0.4";_ab.style.cursor="not-allowed";
+  var _ib = document.getElementById("info-box"); if (_ib) _ib.style.display = "none";
+  document.getElementById("edit-banner").style.display   = "none";
+  buildBingoInputGrid(Array(25).fill(""));
+  setTimeout(resizeBingoGrid, 100);
+  currentImg = null;
+  editingId  = null;
+  document.getElementById("ticket-name").value = getAutoNumber() ? "Schein " + (tickets.length + 1) : "";
+  var btn = document.getElementById("save-btn");
+  btn.innerHTML = "&#128190; Speichern";
+  btn.style.background = "";
+  btn.style.color = "";
+}
+
+document.getElementById("file-input").addEventListener("change", function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    currentImg = ev.target.result;
+    document.getElementById("preview-img").src = currentImg;
+    document.getElementById("preview-wrap").style.display = "block";
+    var _ab2 = document.getElementById("analyze-btn");
+    if (_ab2) {
+      var hasKey = !!getApiKey();
+      _ab2.style.opacity = hasKey ? "1" : "0.4";
+      _ab2.style.cursor  = hasKey ? "pointer" : "not-allowed";
+    }
+    var _ib = document.getElementById("info-box"); if (_ib) _ib.style.display = "none";
+  };
+  reader.readAsDataURL(file);
+});
+
+var _kiProgressTimer = null;
+var _kiProgressVal = 0;
+var _kiMessages = [
+  "Bild wird geladen...",
+  "Zahlen werden erkannt...",
+  "Raster wird analysiert...",
+  "Serien- und Losnummer suchen...",
+  "Fast fertig..."
+];
+
+function showKiResult(msg) {
+  document.getElementById("confirm-title").innerHTML = "🤖 KI-Erkennung";
+  document.getElementById("confirm-text").innerHTML = msg;
+  document.getElementById("confirm-overlay").style.display = "flex";
+  var btn = document.getElementById("confirm-ok-btn");
+  btn.innerHTML = "OK";
+  btn.className = "btn btn-secondary";
+  btn.style.width = "auto";
+  btn.onclick = function() {
+    document.getElementById("confirm-overlay").style.display = "none";
+    setTimeout(function() {
+      var grid = document.getElementById("bingo-input-grid");
+      if (grid) grid.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+}
+
+function showKiProgress() {
+  _kiProgressVal = 0;
+  document.getElementById("ki-progress-overlay").style.display = "flex";
+  document.getElementById("ki-progress-bar").style.width = "0%";
+  document.getElementById("ki-progress-pct").textContent = "0%";
+  document.getElementById("ki-progress-label").textContent = _kiMessages[0];
+  var step = 0;
+  _kiProgressTimer = setInterval(function() {
+    var increment = _kiProgressVal < 60 ? 3 : _kiProgressVal < 80 ? 1.5 : 0.5;
+    _kiProgressVal = Math.min(90, _kiProgressVal + increment);
+    document.getElementById("ki-progress-bar").style.width = _kiProgressVal + "%";
+    document.getElementById("ki-progress-pct").textContent = Math.round(_kiProgressVal) + "%";
+    var msgIdx = Math.min(Math.floor(_kiProgressVal / 20), _kiMessages.length - 1);
+    document.getElementById("ki-progress-label").textContent = _kiMessages[msgIdx];
+  }, 300);
+}
+
+function hideKiProgress() {
+  document.getElementById("ki-progress-bar").style.width = "100%";
+  document.getElementById("ki-progress-pct").textContent = "100%";
+  document.getElementById("ki-progress-label").textContent = "Fertig!";
+  clearInterval(_kiProgressTimer);
+  setTimeout(function() {
+    document.getElementById("ki-progress-overlay").style.display = "none";
+  }, 500);
+}
+
+function getApiKey() { return localStorage.getItem("bingo_api_key") || ""; }
+
+function saveApiKey() {
+  var key = document.getElementById("api-key-input").value.trim();
+  if (!key) { showToast("⚠️ Bitte API-Key eingeben."); return; }
+  if (!key.startsWith("sk-ant-")) { showToast("⚠️ Ungültiger Key — muss mit sk-ant- beginnen."); return; }
+  localStorage.setItem("bingo_api_key", key);
+  updateApiKeyStatus();
+  showToast("✅ API-Key gespeichert! KI-Erkennung ist jetzt aktiv.");
+}
+
+function deleteApiKey() {
+  localStorage.removeItem("bingo_api_key");
+  var inp = document.getElementById("api-key-input");
+  if (inp) inp.value = "";
+  updateApiKeyStatus();
+  showToast("🗑️ API-Key gelöscht.");
+}
+
+function toggleApiKeyVisibility() {
+  var inp = document.getElementById("api-key-input");
+  if (inp) inp.type = inp.type === "password" ? "text" : "password";
+}
+
+function handlePhotoClick() {
+  if (!getApiKey()) {
+    showConfirm("Für die Foto-Erkennung wird ein API-Key benötigt. Möchtest du jetzt einen einrichten?", function() {
+      navigate("einstellungen", document.querySelectorAll(".nav-btn")[4]);
+      setTimeout(function() {
+        var el = document.getElementById("api-key-input");
+        if (el) el.focus();
+      }, 300);
+    }, "⚙️ Zu Einstellungen", "btn btn-secondary");
+    return;
+  }
+  document.getElementById("file-input").click();
+}
+
+function updateApiKeyStatus() {
+  var el = document.getElementById("api-key-status");
+  var ab = document.getElementById("analyze-btn");
+  var key = getApiKey();
+  if (el) {
+    if (key) {
+      el.innerHTML = "✅ <strong>API-Key gespeichert</strong> — KI-Erkennung aktiv<br><span style='font-size:.72rem;font-weight:400;color:var(--muted);'>" + key.substring(0,16) + "••••••••••••</span>";
+      el.style.cssText = "border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;font-weight:700;text-align:center;background:rgba(42,157,92,.1);border:1px solid rgba(42,157,92,.3);color:var(--green);";
+    } else {
+      el.innerHTML = "❌ <strong>Kein API-Key</strong> — KI-Erkennung nicht verfügbar<br><span style='font-size:.72rem;font-weight:400;color:var(--muted);'>Anleitung unten folgen um einen Key einzurichten.</span>";
+      el.style.cssText = "border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;font-weight:700;text-align:center;background:rgba(230,57,70,.07);border:1px solid rgba(230,57,70,.25);color:var(--accent2);";
+    }
+  }
+  var pb = document.getElementById("photo-btn");
+  if (pb) {
+    pb.style.opacity = key ? "1" : "0.4";
+    pb.style.cursor  = key ? "pointer" : "not-allowed";
+  }
+  if (ab) {
+    if (key) {
+      ab.style.opacity = currentImg ? "1" : "0.4";
+      ab.style.cursor  = currentImg ? "pointer" : "not-allowed";
+    } else {
+      ab.style.opacity = "0.4";
+      ab.style.cursor  = "not-allowed";
+    }
+  }
+}
+
+function loadApiKeySettings() {
+  var key = getApiKey();
+  var inp = document.getElementById("api-key-input");
+  if (inp && key) inp.value = key;
+  updateApiKeyStatus();
+}
+
+function analyzeImageOrHint() {
+  if (!currentImg) {
+    showToast("📷 Bitte zuerst ein Foto vom Schein hochladen.");
+    return;
+  }
+  if (!getApiKey()) {
+    showConfirm("Kein API-Key gespeichert. Möchtest du jetzt einen einrichten?", function() {
+      navigate("einstellungen", document.querySelectorAll(".nav-btn")[4]);
+      setTimeout(function() {
+        var el = document.getElementById("api-key-input");
+        if (el) el.focus();
+      }, 300);
+    }, "⚙️ Zu Einstellungen", "btn btn-secondary");
+    return;
+  }
+  analyzeImage();
+}
+
+async function analyzeImage() {
+  var btn = document.getElementById("analyze-btn");
+  btn.disabled = true;
+  btn.innerHTML = "<span class='spinner'></span> KI analysiert...";
+  showKiProgress();
+  try {
+    var base64 = currentImg.split(",")[1];
+    var mimeMatch = currentImg.match(/data:([^;]+);/);
+    var mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+    var response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": getApiKey(),
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514", max_tokens: 1000,
+        messages: [{role:"user", content:[
+          {type:"image", source:{type:"base64", media_type:mimeType, data:base64}},
+          {type:"text", text:"Dies ist ein Bingo-Schein (5x5 Raster, Spalten B I N G O, Zahlen 1-75).\n\nWICHTIG zur Orientierung:\n- Bei den meisten Scheinen stehen Seriennummer und Losnummer LINKS neben dem Raster, um 90 Grad gedreht (von unten nach oben lesbar). Das Label 'Seriennummer' und 'Losnummer' steht dabei ebenfalls gedreht daneben.\n- Bei manchen Scheinen stehen sie waagerecht, z.B. 'Serie 4106 Los-Nr. 13685' in einer Zeile.\n- Pruefe beide Moeglichkeiten und waehle die plausiblere.\n\nVorgehen:\n1) Lies alle 25 Rasterzahlen (Zeile fuer Zeile, links nach rechts). confident=true=sicher, false=unsicher.\n2) Lies Seriennummer: Bei gedrehten Scheinen links neben dem Raster, von unten nach oben. serial_confident=false wenn unsicher. serial_rotated=true wenn 90 Grad gedreht.\n3) Lies Losnummer: Ebenso. lot_confident=false wenn unsicher. lot_rotated=true wenn 90 Grad gedreht.\n\nAntworte NUR mit JSON:\n{\"grid\":[1,2,3,...],\"confident\":[true,false,...],\"serial\":7303,\"serial_confident\":true,\"serial_rotated\":true,\"lot\":26659,\"lot_confident\":true,\"lot_rotated\":true}\nNull fuer nicht erkannte Werte."}
+        ]}]
+      })
+    });
+    var data = await response.json();
+    if (!response.ok) {
+      var errMsg = (data.error && data.error.message) ? data.error.message : "HTTP " + response.status;
+      throw new Error(errMsg);
+    }
+    if (!data.content || !data.content.length) throw new Error("Leere Antwort von API");
+    var text = data.content.map(function(c){ return c.text || ""; }).join("");
+    var match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Kein JSON");
+    var result = JSON.parse(match[0]);
+    if (!result.grid || result.grid.length !== 25) throw new Error("Falsche Anzahl");
+    buildBingoInputGrid(result.grid, result.confident);
+    if (result.serial) document.getElementById("ticket-serial").value = result.serial;
+    if (result.lot)    document.getElementById("ticket-lot").value    = result.lot;
+    var uncertain = result.confident ? result.confident.filter(function(c){ return c === false; }).length : 0;
+    var msgs = [];
+    if (!result.serial) {
+      msgs.push("⚠️ <strong>Seriennummer</strong> nicht erkannt – bitte manuell eintragen.");
+    } else if (result.serial_confident === false) {
+      var hint = result.serial_rotated ? " (stand gedreht)" : "";
+      msgs.push("🟡 <strong>Seriennummer " + result.serial + "</strong> unsicher erkannt" + hint + " – bitte prüfen.");
+    }
+    if (!result.lot) {
+      msgs.push("⚠️ <strong>Losnummer</strong> nicht erkannt – bitte manuell eintragen.");
+    } else if (result.lot_confident === false) {
+      var hint2 = result.lot_rotated ? " (stand gedreht)" : "";
+      msgs.push("🟡 <strong>Losnummer " + result.lot + "</strong> unsicher erkannt" + hint2 + " – bitte prüfen.");
+    }
+    if (uncertain > 0) {
+      msgs.push("🔴 <strong>" + uncertain + " Rasterzahl(en) unsicher</strong> – rot markierte Felder bitte prüfen.");
+    }
+    var msg = msgs.length === 0
+      ? "✅ Alles erkannt! Bitte prüfe und korrigiere bei Bedarf."
+      : msgs.join("<br><br>");
+    showKiResult(msg);
+  } catch(err) {
+    console.error(err);
+    var msg = err.message || "Unbekannter Fehler";
+    // Verständliche Fehlermeldungen
+    if (msg.includes("401") || msg.includes("unauthorized") || msg.includes("authentication")) {
+      showKiResult("🔑 Authentifizierungsfehler — die KI-Erkennung funktioniert nur wenn die Datei lokal auf dem Gerät geöffnet wird, nicht über GitHub Pages.");
+    } else if (msg.includes("403")) {
+      showKiResult("🚫 Zugriff verweigert — bitte die Datei lokal öffnen statt über GitHub Pages.");
+    } else if (msg.includes("network") || msg.includes("fetch") || msg.includes("Failed")) {
+      showKiResult("🌐 Keine Internetverbindung — bitte WLAN prüfen und nochmal versuchen.");
+    } else {
+      showKiResult("⚠️ Fehler: " + msg + "<br><br>Bitte die Zahlen manuell eingeben.");
+    }
+  }
+  hideKiProgress();
+  btn.disabled = false;
+  btn.innerHTML = "&#128269; KI-Erkennung";
+}
+
+function saveTicket() {
+  var name   = document.getElementById("ticket-name").value.trim()          || ("Schein " + (tickets.length + 1));
+  var serial = parseInt(document.getElementById("ticket-serial").value)      || null;
+  var lot    = parseInt(document.getElementById("ticket-lot").value)         || null;
+  var date   = document.getElementById("ticket-date").value                  || null;
+  var inputs = document.querySelectorAll("#bingo-input-grid .bingo-cell input");
+  var grid = [];
+  inputs.forEach(function(inp){ grid.push(parseInt(inp.value) || 0); });
+
+  var errors = [];
+  for (var i = 0; i < 25; i++) {
+    var val = grid[i];
+    var col = i % 5;
+    var row = Math.floor(i / 5);
+    var range = COL_RANGES[col];
+    if (!val || val === 0) {
+      errors.push("Feld " + (i+1) + " ist leer.");
+    } else if (val < range.min || val > range.max) {
+      errors.push("Spalte " + ["B","I","N","G","O"][col] + ", Zeile " + (row+1) + ": " + val + " muss zwischen " + range.min + " und " + range.max + " liegen.");
+    }
+  }
+  var uniq = grid.filter(function(v){ return v > 0; });
+  var dupes = uniq.filter(function(v, i){ return uniq.indexOf(v) !== i; });
+  if (dupes.length > 0) {
+    errors.push("Doppelte Zahlen: " + dupes.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(", "));
+  }
+  if (errors.length > 0) {
+    showToast("⚠️ " + errors[0]);
+    return;
+  }
+  if (editingId !== null) {
+    var idx = tickets.findIndex(function(t){ return t.id === editingId; });
+    if (idx !== -1) { tickets[idx].name=name; tickets[idx].serial=serial; tickets[idx].lot=lot; tickets[idx].date=date; tickets[idx].grid=grid; }
+    localStorage.setItem("bingo_tickets", JSON.stringify(tickets));
+    showToast("&#10003; Aktualisiert: " + name);
+    updateHeaderStats();
+    renderSerialLotList();
+  } else {
+    tickets.push({id:Date.now(), name:name, serial:serial, lot:lot, date:date, grid:grid});
+    localStorage.setItem("bingo_tickets", JSON.stringify(tickets));
+    showToast("&#128190; Gespeichert: " + name);
+    updateHeaderStats();
+  }
+  resetErstellung();
+}
+
+// ── SCHEINE ────────────────────────────────────────────
+
+function openEditModal(id) {
+  var ticket = tickets.find(function(t){ return t.id === id; });
+  if (!ticket) return;
+  editingId = id;
+  document.getElementById("ticket-name").value   = ticket.name   || "";
+  document.getElementById("ticket-date").value   = ticket.date   || "";
+  document.getElementById("ticket-serial").value = ticket.serial || "";
+  document.getElementById("ticket-lot").value    = ticket.lot    || "";
+  buildBingoInputGrid(ticket.grid || Array(25).fill(0));
+  document.getElementById("edit-banner").style.display = "block";
+  document.getElementById("edit-banner-name").textContent = ticket.name;
+  document.getElementById("preview-wrap").style.display = "none";
+  var _ab=document.getElementById("analyze-btn");_ab.style.opacity="0.4";_ab.style.cursor="not-allowed";
+  var _ib = document.getElementById("info-box"); if (_ib) _ib.style.display = "none";
+  currentImg = null;
+  var btn = document.getElementById("save-btn");
+  btn.innerHTML = "&#128190; Aktualisieren";
+  btn.style.background = "var(--accent)";
+  btn.style.color = "#111";
+  document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+  document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+  document.getElementById("page-erstellung").classList.add("active");
+  document.querySelector(".nav-btn").classList.add("active");
+  document.getElementById("pages").scrollTop = 0;
+}
+
+function deleteTicket(id) {
+  showConfirm("Diesen Schein wirklich löschen?", function() {
+    tickets = tickets.filter(function(t){ return t.id !== id; });
+    localStorage.setItem("bingo_tickets", JSON.stringify(tickets));
+    if (editingId === id) resetErstellung();
+    renderScheine();
+    updateHeaderStats();
+    showToast("&#128465; Schein gelöscht.");
+  });
+}
+
+function deleteAllTickets() {
+  if (tickets.length === 0) { showToast("Keine Scheine vorhanden."); return; }
+  showConfirm("Wirklich ALLE Scheine löschen?", function() {
+    tickets = [];
+    localStorage.setItem("bingo_tickets", JSON.stringify(tickets));
+    renderScheine();
+    updateHeaderStats();
+    showToast("&#128465; Alle Scheine gelöscht.");
+  });
+}
+
+function resizeMiniGrids() {
+  var app = document.getElementById("app") || document.body;
+  var pageWidth = app.offsetWidth;
+  var gridWidth = (pageWidth - 32) * 0.5;
+  var cellSize = Math.floor((gridWidth - 4 * 4) / 5);
+  cellSize = Math.max(20, Math.min(cellSize, 80));
+  var fontSize = Math.max(8, Math.floor(cellSize * 0.4));
+  var headerSize = Math.max(10, Math.floor(cellSize * 0.45));
+  document.querySelectorAll(".ticket-mini-cell").forEach(function(c) {
+    c.style.fontSize = fontSize + "px";
+  });
+  document.querySelectorAll(".ticket-mini-grid div").forEach(function(h) {
+    if (h.style.background === "rgb(44, 57, 76)") {
+      h.style.fontSize = headerSize + "px";
+    }
+  });
+  document.querySelectorAll(".ticket-mini-grid svg").forEach(function(svg) {
+    var mini = svg.parentElement;
+    var cells = mini.querySelectorAll(".ticket-mini-cell");
+    var lines = svg.querySelectorAll("line");
+    lines.forEach(function(lineEl) {
+      var i1 = parseInt(lineEl.getAttribute("data-from"));
+      var i2 = parseInt(lineEl.getAttribute("data-to"));
+      if (isNaN(i1) || isNaN(i2)) return;
+      var c1 = cells[i1];
+      var c2 = cells[i2];
+      if (!c1 || !c2) return;
+      lineEl.setAttribute("x1", c1.offsetLeft + c1.offsetWidth  / 2);
+      lineEl.setAttribute("y1", c1.offsetTop  + c1.offsetHeight / 2);
+      lineEl.setAttribute("x2", c2.offsetLeft + c2.offsetWidth  / 2);
+      lineEl.setAttribute("y2", c2.offsetTop  + c2.offsetHeight / 2);
+    });
+  });
+}
+
+function renderScheine() {
+  var container = document.getElementById("tickets-list");
+  var emptyState = document.getElementById("scheine-empty-state");
+  var buttonsArea = document.getElementById("scheine-buttons-area");
+  var sortBtn = document.getElementById("sort-filter-btn");
+  var delBtn = document.getElementById("delete-all-tickets-btn");
+  if (!container || !emptyState) return;
+
+  // Buttons-Bereich
+  if (buttonsArea) buttonsArea.style.display = tickets.length >= 1 ? "block" : "none";
+  if (sortBtn)     sortBtn.style.display     = tickets.length >= 2 ? "block" : "none";
+  if (delBtn)      delBtn.style.display      = tickets.length >= 1 ? "block" : "none";
+
+  if (tickets.length === 0) {
+    emptyState.innerHTML = "<div style='text-align:center;padding:24px 16px;'>" +
+      "<div style='font-size:3rem;margin-bottom:12px;'>&#127903;&#65039;</div>" +
+      "<p style='color:var(--muted);font-size:.85rem;margin-bottom:16px;'>Kein Schein gespeichert.</p>" +
+      "<button class='btn btn-secondary' style='width:auto;padding:8px 20px;' onclick=\"navigate('erstellung', document.querySelectorAll('.nav-btn')[0])\">&#9999;&#65039; Jetzt Schein erstellen</button>" +
+      "</div>";
+    container.innerHTML = "";
+    return;
+  }
+
+  emptyState.innerHTML = "";
+  container.innerHTML = "";
+  getSortedTickets().forEach(function(ticket) {
+    var hasBingo = checkTicketBingo(ticket);
+    var winLines = getWinLines(ticket);
+    var serialLotBottom = "";
+    if (ticket.serial || ticket.lot) {
+      var parts = [];
+      if (ticket.serial) parts.push("Serie: " + ticket.serial);
+      if (ticket.lot)    parts.push("Los: " + ticket.lot);
+      serialLotBottom = "<div style='font-size:1.2rem;color:var(--muted);font-weight:400;text-align:center;padding:10px 12px 12px;letter-spacing:1px;'>" + parts.join(" · ") + "</div>";
+    }
+    var bc0 = countTicketBingos(ticket);
+    var sw0 = isSerialWinner(ticket.id);
+    var hasWin = bc0 > 0 || sw0;
+    var badgeHtml = "";
+    if (hasWin) {
+      var trs0 = "";
+      for (var ti = 0; ti < Math.min(bc0,3); ti++) trs0 += "&#127942;";
+      if (sw0) trs0 += "<span style='font-size:.85rem;'>&#127903;&#65039;</span>";
+      var label0 = bc0 === 1 ? "Bingo" : bc0 === 2 ? "Doppelbingo" : bc0 >= 3 ? bc0 + "x Bingo" : "";
+      if (sw0) label0 += (label0 ? " + " : "") + "Serien-/Losnummer";
+      badgeHtml = "<span class='badge bingo'>" + trs0 + " " + label0 + "</span>";
+    }
+    var btns = "<div style='display:flex;gap:6px;'>" +
+      "<button onclick='openEditModal(" + ticket.id + ")' style='background:none;border:1px solid #2c394c;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:1rem;'>✏️</button>" +
+      "<button onclick='deleteTicket(" + ticket.id + ")' style='background:none;border:1px solid #2c394c;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:1rem;'>🗑️</button>" +
+    "</div>";
+    var topRow = hasWin
+      ? "<div style='display:flex;align-items:center;justify-content:space-between;padding:10px 14px 0;min-height:36px;'>" +
+          "<div style='width:80px;'></div>" +
+          "<div style='flex:1;text-align:center;'>" + badgeHtml + "</div>" +
+          "<div style='width:80px;display:flex;justify-content:flex-end;'>" + btns + "</div>" +
+        "</div>"
+      : "";
+    var headerStyle = hasWin
+      ? "border-bottom:none;justify-content:center;text-align:center;position:relative;"
+      : "border-bottom:none;justify-content:center;text-align:center;position:relative;padding-top:10px;";
+    var card = document.createElement("div");
+    card.className = "ticket-card";
+    card.innerHTML =
+      topRow +
+      "<div class='ticket-card-header' style='" + headerStyle + "'>" +
+        (hasWin ? "" : "<div style='position:absolute;right:14px;top:50%;transform:translateY(-50%);'>" + btns + "</div>") +
+        "<div>" +
+          "<h3 style='margin:0;text-align:center;'>" + ticket.name + "</h3>" +
+          (ticket.date ? "<div style='font-size:.75rem;color:var(--muted);font-weight:400;margin-top:2px;'>" + formatDate(ticket.date) + "</div>" : "") +
+        "</div>" +
+      "</div>" +
+      "<div class='ticket-card-body'>" +
+        "<div class='ticket-mini-grid' id='mini-" + ticket.id + "'></div>" +
+      "</div>" +
+      serialLotBottom;
+    container.appendChild(card);
+    var mini = document.getElementById("mini-" + ticket.id);
+    var mgSizeSetting = getMiniGridSize();
+    var mgMaxWidth = { small: "55%", medium: "75%", large: "95%" }[mgSizeSetting] || "75%";
+    var mgGap = { small: "2px", medium: "3px", large: "4px" }[mgSizeSetting] || "3px";
+    var mgFont = { small: ".65rem", medium: ".82rem", large: "1rem" }[mgSizeSetting] || ".82rem";
+    var mgRadius = { small: "4px", medium: "6px", large: "8px" }[mgSizeSetting] || "6px";
+    mini.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:" + mgGap + ";position:relative;width:" + mgMaxWidth + ";max-width:100%;margin-left:auto;margin-right:auto;";
+    COLS.forEach(function(c) {
+      var h = document.createElement("div");
+      h.style.cssText = "aspect-ratio:1;text-align:center;font-family:var(--font-head);font-size:" + mgFont + ";color:#ffffff;background:#2c394c;border-radius:" + mgRadius + ";display:flex;align-items:center;justify-content:center;";
+      h.textContent = c; mini.appendChild(h);
+    });
+    ticket.grid.forEach(function(val, i) {
+      var cell = document.createElement("div");
+      var isDrawn = drawnNums.includes(val);
+      var inWin   = winLines.has(i);
+      cell.className = "ticket-mini-cell" + (inWin ? " bingo-line" : (isDrawn ? " hit" : ""));
+      cell.style.cssText = "font-size:" + mgFont + ";border-radius:" + mgRadius + ";aspect-ratio:1;";
+      cell.textContent = val || "—";
+      mini.appendChild(cell);
+    });
+    var completedLines = getWinLinesArray(ticket);
+    if (completedLines.length > 0) {
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:10;";
+      mini.appendChild(svg);
+
+      function drawLines() {
+        svg.innerHTML = "";
+        var cells = mini.querySelectorAll(".ticket-mini-cell");
+        completedLines.forEach(function(line) {
+          var c1 = cells[line[0]], c2 = cells[line[line.length-1]];
+          if (!c1 || !c2) return;
+          var x1 = c1.offsetLeft + c1.offsetWidth/2;
+          var y1 = c1.offsetTop  + c1.offsetHeight/2;
+          var x2 = c2.offsetLeft + c2.offsetWidth/2;
+          var y2 = c2.offsetTop  + c2.offsetHeight/2;
+          var lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          lineEl.setAttribute("x1", x1); lineEl.setAttribute("y1", y1);
+          lineEl.setAttribute("x2", x2); lineEl.setAttribute("y2", y2);
+          lineEl.setAttribute("stroke", getLineColor());
+          lineEl.setAttribute("stroke-width", getLineWidth());
+          lineEl.setAttribute("stroke-linecap", "round");
+          lineEl.setAttribute("opacity", getLineOpacity());
+          svg.appendChild(lineEl);
+        });
+      }
+
+      setTimeout(drawLines, 0);
+
+      if (window.ResizeObserver) {
+        var ro = new ResizeObserver(drawLines);
+        ro.observe(mini);
+      }
+    }
+  });
+  setTimeout(resizeMiniGrids, 50);
+}
+
+// ── ZAHLEN ─────────────────────────────────────────────
+function buildNumbersGrid() {
+  var delBtn = document.getElementById("delete-all-drawn-btn");
+  if (delBtn) {
+    delBtn.style.opacity = drawnNums.length > 0 ? "1" : "0.4";
+    delBtn.style.cursor = drawnNums.length > 0 ? "pointer" : "not-allowed";
+  }
+  var body = document.getElementById("bingo-num-body");
+  if (!body) return;
+  body.innerHTML = "";
+  var cols = [
+    {start:1,  cls:"b"},
+    {start:16, cls:"i"},
+    {start:31, cls:"n"},
+    {start:46, cls:"g"},
+    {start:61, cls:"o"}
+  ];
+  for (var row = 0; row < 15; row++) {
+    for (var col = 0; col < 5; col++) {
+      var num = cols[col].start + row;
+      (function(n, colCls, isLast) {
+        var btn = document.createElement("button");
+        btn.className = "num-btn " + colCls + (isLast ? " last-col" : "") + (drawnNums.includes(n) ? " drawn" : "");
+        btn.textContent = n;
+        btn.onclick = function(){ toggleNumber(n, btn); };
+        body.appendChild(btn);
+      })(num, cols[col].cls, col === 4);
+    }
+  }
+  updateLastDrawn();
+  updateDrawnCount();
+  updateHeaderStats();
+}
+
+function toggleNumber(n, btn) {
+  if (getConfirmDraw()) {
+    var action = drawnNums.indexOf(n) === -1 ? "Zahl " + n + " ziehen?" : "Zahl " + n + " zurücknehmen?";
+    showConfirm(action, function() { doToggleNumber(n, btn); }, "✓ OK", "btn btn-secondary");
+    return;
+  }
+  doToggleNumber(n, btn);
+}
+
+function doToggleNumber(n, btn) {
+  var prevBingoLineCounts = {};
+  tickets.forEach(function(t){ prevBingoLineCounts[t.id] = countTicketBingos(t); });
+  var idx = drawnNums.indexOf(n);
+  var maxDraw = getMaxDraw();
+  if (idx === -1) {
+    if (drawnNums.length >= maxDraw) {
+      showToast("Maximum " + maxDraw + " Zahlen erreicht!");
+      return;
+    }
+    drawnNums.push(n);
+    btn.classList.add("drawn");
+    if (getToastDraw()) showToast("Zahl " + n + " gezogen!");
+  } else {
+    drawnNums.splice(idx, 1);
+    btn.classList.remove("drawn");
+  }
+  localStorage.setItem("bingo_drawn", JSON.stringify(drawnNums));
+  updateLastDrawn();
+  updateDrawnCount();
+  updateHeaderStats();
+  var delBtn = document.getElementById("delete-all-drawn-btn");
+  if (delBtn) {
+    delBtn.style.opacity = drawnNums.length > 0 ? "1" : "0.4";
+    delBtn.style.cursor = drawnNums.length > 0 ? "pointer" : "not-allowed";
+  }
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+  if (idx === -1) {
+    var prevLineCounts = prevBingoLineCounts;
+    tickets.forEach(function(t) {
+      var bc = countTicketBingos(t);
+      var prev = prevLineCounts[t.id] || 0;
+      if (bc > prev) {
+        var label = bc === 1 ? "ein Bingo" : bc === 2 ? "ein Doppelbingo" : bc === 3 ? "ein Dreifachbingo" : "einen " + bc + "x Bingo";
+        setTimeout(function(){
+          showBingoPopup("Du hast mit \"" + t.name + "\"\n" + label + " gewonnen!", bc);
+        }, 400);
+      }
+    });
+  }
+  if (drawnNums.length === maxDraw) {
+    showToast("&#127942; Alle " + maxDraw + " Zahlen gezogen!" + (getAutoNav() ? " Weiter zur Übersicht..." : ""));
+    if (getAutoNav()) {
+      setTimeout(function() {
+        var btnUe = document.querySelectorAll(".nav-btn")[3];
+        navigate("uebersicht", btnUe);
+      }, 1500);
+    }
+  }
+}
+
+function updateDrawnCount() {
+  var el = document.getElementById("drawn-count");
+  if (el) el.textContent = drawnNums.length;
+}
+
+function deleteAllDrawn() {
+  if (drawnNums.length === 0) { showToast("Keine Zahlen gezogen."); return; }
+  showConfirm("Alle " + drawnNums.length + " gezogenen Zahlen löschen?", function() {
+    drawnNums = [];
+    localStorage.setItem("bingo_drawn", JSON.stringify(drawnNums));
+    buildNumbersGrid();
+    updateDrawnCount();
+    updateHeaderStats();
+    if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+    showToast("&#128465; Alle Zahlen gelöscht.");
+  });
+}
+
+function updateLastDrawn() {
+  var bar = document.getElementById("last-drawn-chips");
+  if (!bar) return;
+  if (drawnNums.length === 0) {
+    bar.innerHTML = "<span style='color:var(--muted);font-size:.8rem;'>Noch keine Zahlen gezogen</span>";
+    return;
+  }
+  var last5 = drawnNums.slice(-5).reverse();
+  bar.innerHTML = last5.map(function(n, i){
+    return "<span class='drawn-chip" + (i===0?" newest":"") + "'>" + n + "</span>";
+  }).join("");
+}
+
+// ── WINNER FILTER / SORT ───────────────────────────────
+var winnerSortKey = null;
+var winnerSortDir = null;
+
+function toggleWinnerFilter() {
+  var panel = document.getElementById("winner-filter-panel");
+  var arrow = document.getElementById("winner-filter-arrow");
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+    arrow.innerHTML = "&#9650;";
+  } else {
+    panel.style.display = "none";
+    arrow.innerHTML = "&#9660;";
+  }
+}
+
+function setWinnerSort(key, dir) {
+  winnerSortKey = key;
+  winnerSortDir = dir;
+  var ids = ["ws-name-asc","ws-name-desc","ws-date-asc","ws-date-desc",
+             "ws-serial-asc","ws-serial-desc","ws-lot-asc","ws-lot-desc",
+             "ws-bingo-asc","ws-bingo-desc"];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.fontWeight="700"; el.style.border="1px solid var(--border)"; }
+  });
+  var active = document.getElementById("ws-" + key + "-" + dir);
+  if (active) { active.style.fontWeight="800"; active.style.border="2px solid #2c394c"; }
+  renderUebersicht();
+}
+
+function resetWinnerSort() {
+  winnerSortKey = null;
+  winnerSortDir = null;
+  var ids = ["ws-name-asc","ws-name-desc","ws-date-asc","ws-date-desc",
+             "ws-serial-asc","ws-serial-desc","ws-lot-asc","ws-lot-desc",
+             "ws-bingo-asc","ws-bingo-desc"];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.fontWeight="700"; el.style.border="1px solid var(--border)"; }
+  });
+  renderUebersicht();
+}
+
+function getSortedWinners(winners) {
+  var list = winners.slice();
+  if (!winnerSortKey) return list;
+  list.sort(function(a, b) {
+    var va, vb;
+    if (winnerSortKey === "name") {
+      va = (a.name || "").toLowerCase(); vb = (b.name || "").toLowerCase();
+    } else if (winnerSortKey === "date") {
+      va = a.date ? new Date(a.date).getTime() : 0;
+      vb = b.date ? new Date(b.date).getTime() : 0;
+    } else if (winnerSortKey === "serial") {
+      va = parseFloat(a.serial) || 0; vb = parseFloat(b.serial) || 0;
+    } else if (winnerSortKey === "lot") {
+      va = parseFloat(a.lot) || 0; vb = parseFloat(b.lot) || 0;
+    } else if (winnerSortKey === "bingo") {
+      va = countTicketBingos(a) + (isSerialWinner(a.id) ? 0.5 : 0);
+      vb = countTicketBingos(b) + (isSerialWinner(b.id) ? 0.5 : 0);
+    }
+    if (va < vb) return winnerSortDir === "asc" ? -1 : 1;
+    if (va > vb) return winnerSortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+// ── FILTER / SORT ──────────────────────────────────────
+function toggleFilterPanel() {
+  var panel = document.getElementById("filter-panel");
+  var arrow = document.getElementById("filter-arrow");
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+    arrow.innerHTML = "&#9650;";
+  } else {
+    panel.style.display = "none";
+    arrow.innerHTML = "&#9660;";
+  }
+}
+
+function setSortFilter(key, dir) {
+  currentSortKey = key;
+  currentSortDir = dir;
+  var ids = ["sort-name-asc","sort-name-desc","sort-date-asc","sort-date-desc",
+             "sort-serial-asc","sort-serial-desc","sort-lot-asc","sort-lot-desc",
+             "sort-bingo-asc","sort-bingo-desc"];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.fontWeight = "700";
+    if (el) el.style.border = "1px solid var(--border)";
+  });
+  var activeId = "sort-" + key + "-" + dir;
+  var active = document.getElementById(activeId);
+  if (active) {
+    active.style.fontWeight = "800";
+    active.style.border = "2px solid #2c394c";
+  }
+  renderScheine();
+}
+
+function resetSortFilter() {
+  currentSortKey = null;
+  currentSortDir = null;
+  var ids = ["sort-name-asc","sort-name-desc","sort-date-asc","sort-date-desc",
+             "sort-serial-asc","sort-serial-desc","sort-lot-asc","sort-lot-desc",
+             "sort-bingo-asc","sort-bingo-desc"];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.fontWeight = "700"; el.style.border = "1px solid var(--border)"; }
+  });
+  renderScheine();
+}
+
+function getSortedTickets() {
+  var list = tickets.slice();
+  if (!currentSortKey) return list;
+  list.sort(function(a, b) {
+    var va, vb;
+    if (currentSortKey === "name") {
+      va = (a.name || "").toLowerCase();
+      vb = (b.name || "").toLowerCase();
+    } else if (currentSortKey === "date") {
+      va = a.date ? new Date(a.date).getTime() : 0;
+      vb = b.date ? new Date(b.date).getTime() : 0;
+    } else if (currentSortKey === "serial") {
+      va = parseFloat(a.serial) || 0;
+      vb = parseFloat(b.serial) || 0;
+    } else if (currentSortKey === "lot") {
+      va = parseFloat(a.lot) || 0;
+      vb = parseFloat(b.lot) || 0;
+    } else if (currentSortKey === "bingo") {
+      va = countTicketBingos(a) + (isSerialWinner(a.id) ? 0.5 : 0);
+      vb = countTicketBingos(b) + (isSerialWinner(b.id) ? 0.5 : 0);
+    }
+    if (va < vb) return currentSortDir === "asc" ? -1 : 1;
+    if (va > vb) return currentSortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+// ── BINGO CHECK ────────────────────────────────────────
+function checkTicketBingo(ticket) {
+  return BINGO_LINES.some(function(line){
+    return line.every(function(i){ return drawnNums.includes(ticket.grid[i]); });
+  });
+}
+function countTicketBingos(ticket) {
+  return BINGO_LINES.filter(function(line){
+    return line.every(function(i){ return drawnNums.includes(ticket.grid[i]); });
+  }).length;
+}
+function getWinLinesArray(ticket) {
+  var result = [];
+  BINGO_LINES.forEach(function(line) {
+    if (line.every(function(i){ return drawnNums.includes(ticket.grid[i]); })) {
+      result.push(line);
+    }
+  });
+  return result;
+}
+
+function getWinLines(ticket) {
+  var cells = new Set();
+  BINGO_LINES.forEach(function(line){
+    if (line.every(function(i){ return drawnNums.includes(ticket.grid[i]); }))
+      line.forEach(function(i){ cells.add(i); });
+  });
+  return cells;
+}
+
+// ── ÜBERSICHT ──────────────────────────────────────────
+function calcBingoProb() {
+  var probEl = document.getElementById("prob-content");
+  if (!probEl) return;
+  var maxDraw = parseInt(localStorage.getItem("bingo_max_draw") || "22");
+  var remaining = maxDraw - drawnNums.length;
+
+  if (tickets.length === 0) {
+    probEl.innerHTML = "<span style='color:var(--muted);font-size:.82rem;display:block;text-align:center;'>Kein Schein gespeichert.</span>";
+    return;
+  }
+  if (drawnNums.length === 0) {
+    probEl.innerHTML = "<span style='color:var(--muted);font-size:.82rem;display:block;text-align:center;'>Noch keine Zahlen gezogen.</span>";
+    return;
+  }
+
+  var LINES = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+    [0,6,12,18,24],[4,8,12,16,20]
+  ];
+
+  var drawnSet = {};
+  drawnNums.forEach(function(n){ drawnSet[n] = true; });
+  var pool = [];
+  for (var i = 1; i <= 75; i++) if (!drawnSet[i]) pool.push(i);
+  var poolLen = pool.length;
+
+  var curB = tickets.filter(function(t){ return countTicketBingos(t) >= 1; }).length;
+  var curD = tickets.filter(function(t){ return countTicketBingos(t) >= 2; }).length;
+  var curT = tickets.filter(function(t){ return countTicketBingos(t) >= 3; }).length;
+
+  if (remaining <= 0) {
+    renderProbResult(probEl, curB>=1?100:0, curD>=1?100:0, curT>=1?100:0, remaining, tickets.length);
+    return;
+  }
+
+  var SIMS = 8000;
+  var cB = 0, cD = 0, cT = 0;
+  var simPool = pool.slice();
+
+  for (var s = 0; s < SIMS; s++) {
+    for (var j = poolLen - 1; j > 0; j--) {
+      var r = Math.floor(Math.random() * (j + 1));
+      var tmp = simPool[j]; simPool[j] = simPool[r]; simPool[r] = tmp;
+    }
+    var simSet = {};
+    drawnNums.forEach(function(n){ simSet[n] = true; });
+    for (var k = 0; k < remaining && k < poolLen; k++) simSet[simPool[k]] = true;
+
+    var anyB = false, anyD = false, anyT = false;
+    for (var ti = 0; ti < tickets.length; ti++) {
+      var completed = 0;
+      var g = tickets[ti].grid;
+      for (var li = 0; li < LINES.length; li++) {
+        var ln = LINES[li];
+        if (simSet[g[ln[0]]] && simSet[g[ln[1]]] && simSet[g[ln[2]]] && simSet[g[ln[3]]] && simSet[g[ln[4]]]) completed++;
+      }
+      if (completed >= 1) anyB = true;
+      if (completed >= 2) anyD = true;
+      if (completed >= 3) anyT = true;
+    }
+    if (anyB) cB++;
+    if (anyD) cD++;
+    if (anyT) cT++;
+  }
+
+  var pB = curB >= 1 ? 100 : Math.round(cB / SIMS * 100);
+  var pD = curD >= 1 ? 100 : Math.round(cD / SIMS * 100);
+  var pT = curT >= 1 ? 100 : Math.round(cT / SIMS * 100);
+  renderProbResult(probEl, pB, pD, pT, remaining, tickets.length);
+}
+
+function renderProbResult(probEl, pB, pD, pT, remaining, ticketCount) {
+  function bar(p) {
+    var col  = p === 100 ? "#8bc34a" : p >= 67 ? "#8bc34a" : p >= 34 ? "#f5a623" : "#e57373";
+    var tcol = p === 100 ? "#5a8a1a" : p >= 67 ? "#5a8a1a" : p >= 34 ? "#c47a00" : "#c0392b";
+    var label = p === 100 ? "✅ Erreicht" : p + "%";
+    return "<div style='height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px;'>" +
+           "<div style='height:100%;width:" + p + "%;background:" + col + ";border-radius:4px;'></div></div>" +
+           "<div style='font-size:.9rem;font-weight:700;color:" + tcol + ";'>" + label + "</div>";
+  }
+
+  var LINES = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+    [0,6,12,18,24],[4,8,12,16,20]
+  ];
+  var drawnSet = {};
+  drawnNums.forEach(function(n){ drawnSet[n] = true; });
+
+  var html = "<div style='font-size:.75rem;color:var(--muted);margin-bottom:14px;text-align:center;'>" +
+    "<strong style='color:var(--text);'>" + ticketCount + "</strong> Schein" + (ticketCount === 1 ? "" : "e") +
+    " · Noch <strong style='color:var(--text);'>" + remaining + "</strong> Zahl" + (remaining === 1 ? "" : "en") + " werden gezogen</div>";
+  html += "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;margin-bottom:16px;'>";
+  html += "<div style='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;'>";
+  html += "<div style='font-size:.75rem;color:var(--muted);margin-bottom:10px;font-weight:600;'>🎯 Bingo</div>" + bar(pB) + "</div>";
+  html += "<div style='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;'>";
+  html += "<div style='font-size:.75rem;color:var(--muted);margin-bottom:10px;font-weight:600;'>🎯🎯 Doppel</div>" + bar(pD) + "</div>";
+  html += "<div style='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;'>";
+  html += "<div style='font-size:.75rem;color:var(--muted);margin-bottom:10px;font-weight:600;'>🎯🎯🎯 Dreifach</div>" + bar(pT) + "</div>";
+  html += "</div>";
+
+  html += "<div style='border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px;'>";
+  html += "<div style='display:grid;grid-template-columns:1fr 80px 80px 80px;gap:6px;align-items:end;font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;'>";
+  html += "<span></span><span style='text-align:center;'>🎯<br>Bingo</span><span style='text-align:center;'>🎯🎯<br>Doppel</span><span style='text-align:center;'>🎯🎯🎯<br>Dreifach</span></div>";
+
+  tickets.forEach(function(ticket) {
+    var curBingos = countTicketBingos(ticket);
+    var lineNeeds = LINES.map(function(line) {
+      return line.filter(function(idx){ return !drawnSet[ticket.grid[idx]]; }).length;
+    }).sort(function(a,b){ return a-b; });
+
+    var needFor1 = lineNeeds[0];
+    var needFor2 = lineNeeds[1];
+    var needFor3 = lineNeeds[2];
+
+    function chip(need, target) {
+      if (curBingos >= target || need === 0) return "<span style='display:block;text-align:center;background:#e8f5e9;color:#5a8a1a;border:1px solid #8bc34a;border-radius:12px;padding:3px 8px;font-size:.72rem;font-weight:600;'>✅</span>";
+      var col = need === 1 ? "#c47a00" : "#c0392b";
+      var bg  = need === 1 ? "#fff8e1" : "#fce4ec";
+      var bc  = need === 1 ? "#f5a623" : "#e57373";
+      return "<span style='display:block;text-align:center;background:" + bg + ";color:" + col + ";border:1px solid " + bc + ";border-radius:12px;padding:3px 8px;font-size:.72rem;font-weight:600;'>noch " + need + "</span>";
+    }
+
+    html += "<div style='display:grid;grid-template-columns:1fr 80px 80px 80px;gap:6px;align-items:center;'>";
+    html += "<span style='font-weight:700;font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>" + ticket.name + "</span>";
+    html += chip(needFor1, 1);
+    html += chip(needFor2, 2);
+    html += chip(needFor3, 3);
+    html += "</div>";
+  });
+  html += "</div>";
+
+  probEl.innerHTML = html;
+}
+
+// ── ÜBERSICHT CARD ORDER ───────────────────────────────
+var UEBERSICHT_CARDS = [
+  { id: 'drawn',   label: '📋 Gezogene Zahlen' },
+  { id: 'prob',    label: '🎯 Bingo-Wahrscheinlichkeit' },
+  { id: 'winners', label: '🏆 Gewinnübersicht' }
+];
+
+function getUebersichtOrder() {
+  var saved = localStorage.getItem('bingo_uebersicht_order');
+  if (saved) {
+    try {
+      var order = JSON.parse(saved);
+      if (UEBERSICHT_CARDS.every(function(c){ return order.includes(c.id); })) return order;
+    } catch(e) {}
+  }
+  return UEBERSICHT_CARDS.map(function(c){ return c.id; });
+}
+
+function saveUebersichtOrder(order) {
+  localStorage.setItem('bingo_uebersicht_order', JSON.stringify(order));
+}
+
+function buildUebersichtCards() {
+  var order = getUebersichtOrder();
+  var container = document.getElementById('uebersicht-cards-container');
+  if (!container) return;
+  container.innerHTML = '';
+  order.forEach(function(id) {
+    var el = document.createElement('div');
+    el.className = 'card';
+    el.style.cssText = 'padding:0;overflow:hidden;margin-bottom:16px;';
+    el.setAttribute('data-card-id', id);
+    if (id === 'drawn') {
+      el.innerHTML = '<div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;margin:0;">&#128203; Gezogene Zahlen</div>' +
+        '<div style="padding:0;"><div class="drawn-sequence" id="drawn-sequence"></div></div>';
+    } else if (id === 'prob') {
+      el.innerHTML = '<div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;margin:0;">🎯 Bingo-Wahrscheinlichkeit</div>' +
+        '<div style="padding:16px;"><div id="prob-content"><span style="color:var(--muted);font-size:.82rem;display:block;text-align:center;">Noch keine Zahlen gezogen.</span></div></div>';
+    } else if (id === 'winners') {
+      el.innerHTML = '<div class="section-title" style="background:#2f55a4;color:#fff;padding:12px 16px;text-align:center;position:relative;margin:0;">&#127942; Gewinnübersicht' +
+        '<button id="winner-filter-btn" onclick="toggleWinnerFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:3px 10px;font-size:.72rem;font-weight:700;cursor:pointer;color:#fff;">&#127937; Sortieren <span id="winner-filter-arrow">&#9660;</span></button></div>' +
+        '<div style="padding:16px;">' +
+        '<div id="winner-filter-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+        '<button onclick="setWinnerSort(\'name\',\'asc\')" id="ws-name-asc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128279; Name A&#8211;Z</button>' +
+        '<button onclick="setWinnerSort(\'name\',\'desc\')" id="ws-name-desc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128279; Name Z&#8211;A</button>' +
+        '<button onclick="setWinnerSort(\'date\',\'asc\')" id="ws-date-asc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128197; Datum &#8593;</button>' +
+        '<button onclick="setWinnerSort(\'date\',\'desc\')" id="ws-date-desc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128197; Datum &#8595;</button>' +
+        '<button onclick="setWinnerSort(\'serial\',\'asc\')" id="ws-serial-asc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128290; Serie &#8593;</button>' +
+        '<button onclick="setWinnerSort(\'serial\',\'desc\')" id="ws-serial-desc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#128290; Serie &#8595;</button>' +
+        '<button onclick="setWinnerSort(\'lot\',\'asc\')" id="ws-lot-asc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#127922; Los &#8593;</button>' +
+        '<button onclick="setWinnerSort(\'lot\',\'desc\')" id="ws-lot-desc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#127922; Los &#8595;</button>' +
+        '<button onclick="setWinnerSort(\'bingo\',\'asc\')" id="ws-bingo-asc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#127942; Gewinn &#8593;</button>' +
+        '<button onclick="setWinnerSort(\'bingo\',\'desc\')" id="ws-bingo-desc" class="btn btn-secondary" style="font-size:.72rem;padding:5px 6px;">&#127942; Gewinn &#8595;</button>' +
+        '</div><button onclick="resetWinnerSort()" style="margin-top:6px;width:100%;background:none;border:none;font-size:.72rem;color:var(--muted);cursor:pointer;text-decoration:underline;">Sortierung zur&#252;cksetzen</button></div>' +
+        '<div id="bingo-winners"><span style="color:var(--muted);font-size:.82rem;">Noch kein Bingo.</span></div></div>';
+    }
+    container.appendChild(el);
+  });
+}
+
+function renderOrderList() {
+  var list = document.getElementById('uebersicht-order-list');
+  if (!list) return;
+  var order = getUebersichtOrder();
+  list.innerHTML = '';
+  order.forEach(function(id, idx) {
+    var card = UEBERSICHT_CARDS.find(function(c){ return c.id === id; });
+    if (!card) return;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;';
+    row.innerHTML = '<span style="font-size:1.2rem;cursor:grab;color:var(--muted);">☰</span>' +
+      '<span style="flex:1;font-size:.85rem;font-weight:600;">' + card.label + '</span>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<button onclick="moveUebersichtCard(\'' + id + '\',-1)" ' + (idx===0?'disabled style="opacity:.3;"':'') + ' style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.85rem;">▲</button>' +
+        '<button onclick="moveUebersichtCard(\'' + id + '\',1)" ' + (idx===order.length-1?'disabled style="opacity:.3;"':'') + ' style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.85rem;">▼</button>' +
+      '</div>';
+    list.appendChild(row);
+  });
+}
+
+function moveUebersichtCard(id, dir) {
+  var order = getUebersichtOrder();
+  var idx = order.indexOf(id);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  var tmp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = tmp;
+  saveUebersichtOrder(order);
+  renderOrderList();
+  buildUebersichtCards();
+  renderUebersicht();
+  applyScreenshotCheckboxes();
+  renderStorageInfo();
+  loadApiKeySettings();
+}
+
+function renderUebersicht() {
+  var el = function(id){ return document.getElementById(id); };
+  if (!el("drawn-sequence")) buildUebersichtCards();
+  if (!el("stat-tickets")) return;
+  el("stat-tickets").textContent = tickets.length;
+  el("stat-drawn").textContent   = drawnNums.length;
+  syncSerialWinners();
+  var winners = tickets.filter(function(t){ return checkTicketBingo(t) || isSerialWinner(t.id); });
+  el("stat-bingos").textContent = winners.length;
+
+  var ticketsLabel = el("stat-tickets").nextElementSibling;
+  if (ticketsLabel) ticketsLabel.innerHTML = tickets.length === 0 ? "Kein Schein<br>gespeichert" : tickets.length === 1 ? "Schein<br>gespeichert" : "Scheine<br>gespeichert";
+  var drawnLabel2 = el("stat-drawn").nextElementSibling;
+  if (drawnLabel2) drawnLabel2.innerHTML = drawnNums.length === 0 ? "Keine Zahlen<br>gezogen" : drawnNums.length === 1 ? "Zahl<br>gezogen" : "Zahlen<br>gezogen";
+  var bingosLabel = el("stat-bingos").nextElementSibling;
+  if (bingosLabel) bingosLabel.innerHTML = winners.length === 0 ? "Kein<br>Gewinn" : winners.length === 1 ? "Schein mit<br>Gewinn" : "Scheine mit<br>Gewinn";
+
+  var summaryEl = el("win-summary");
+  if (summaryEl) {
+    if (winners.length === 0 || !getWinSummaryEnabled()) {
+      summaryEl.style.display = "none";
+    } else {
+      summaryEl.style.display = "block";
+      var counts = { serial: 0 };
+      winners.forEach(function(t) {
+        var bc = countTicketBingos(t);
+        if (bc > 0) counts[bc] = (counts[bc] || 0) + 1;
+        if (isSerialWinner(t.id)) counts.serial++;
+      });
+      var parts = [];
+      [1,2,3,4,5].forEach(function(n) {
+        if (!counts[n]) return;
+        var trophies = "";
+        for (var i = 0; i < Math.min(n,3); i++) trophies += "🏆";
+        var label = n === 1 ? "Bingo" : n === 2 ? "Doppelbingo" : n === 3 ? "Dreifachbingo" : n + "x Bingo";
+        parts.push("<span style='display:inline-flex;align-items:center;gap:4px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:700;'>" + trophies + " " + counts[n] + "x " + label + "</span>");
+      });
+      if (counts.serial > 0) {
+        parts.push("<span style='display:inline-flex;align-items:center;gap:4px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:700;'>🎟️ " + counts.serial + "x Serien-/Losnummer</span>");
+      }
+      summaryEl.innerHTML = "<div style='display:flex;flex-wrap:wrap;gap:6px;justify-content:center;'>" + parts.join("") + "</div>";
+    }
+  }
+  var seq = el("drawn-sequence");
+  seq.style.padding = "0";
+  var cols = ["B","I","N","G","O"];
+  var ranges = [{min:1,max:15},{min:16,max:30},{min:31,max:45},{min:46,max:60},{min:61,max:75}];
+  var html = "<div style='margin:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:calc(100% - 32px);'><table style='width:100%;border-collapse:collapse;font-size:.78rem;'><thead><tr>";
+  cols.forEach(function(c) {
+    html += "<th style='background:#2c394c;color:#ffffff;font-family:var(--font-head);font-size:1.2rem;letter-spacing:2px;padding:6px 4px;text-align:center;width:20%;'>" + c + "</th>";
+  });
+  html += "</tr></thead><tbody>";
+  if (drawnNums.length === 0) {
+    html += "<tr><td colspan='5' style='text-align:center;padding:16px 4px;color:var(--muted);font-size:.82rem;'>Noch keine Zahlen gezogen.</td></tr>";
+  } else {
+    var colNums = [[],[],[],[],[]];
+    getDisplayDrawnNums().forEach(function(n) {
+      for (var c = 0; c < 5; c++) {
+        if (n >= ranges[c].min && n <= ranges[c].max) { colNums[c].push(n); break; }
+      }
+    });
+    var maxRows = Math.max.apply(null, colNums.map(function(a){ return a.length; }));
+    for (var r = 0; r < maxRows; r++) {
+      html += "<tr>";
+      for (var c = 0; c < 5; c++) {
+        var num = colNums[c][r];
+        var borderR = c < 4 ? "border-right:1px solid var(--border);" : "";
+        var borderB = r < maxRows - 1 ? "border-bottom:1px solid var(--border);" : "";
+        if (num !== undefined) {
+          var order = drawnNums.indexOf(num) + 1;
+          html += "<td style='text-align:center;padding:5px 4px;" + borderR + borderB + "background:var(--surface2);font-weight:700;'>" +
+            "<span style='font-size:.55rem;color:#db2523;font-weight:700;vertical-align:super;display:" + (getShowOrderNumbers() ? "inline" : "none") + ";'>" + order + ". </span>" + num + "</td>";
+        } else {
+          html += "<td style='" + borderR + borderB + "'></td>";
+        }
+      }
+      html += "</tr>";
+    }
+  }
+  html += "</tbody></table></div>";
+  seq.innerHTML = html;
+  var winEl = el("bingo-winners");
+  var filterBtn = document.getElementById("winner-filter-btn");
+  if (filterBtn) filterBtn.style.display = (winners.length > 1 && getWinnerSortEnabled()) ? "block" : "none";
+  if (winners.length === 0) {
+    var noWinMsg = drawnNums.length >= 22 ? "&#128577; Leider kein Gl&uuml;ck gehabt, vielleicht klappts beim n&auml;chsten mal!" : "Kein Gewinn.";
+    winEl.innerHTML = "<div style='text-align:center;color:var(--muted);font-size:.82rem;'>" + noWinMsg + "</div>";
+  } else {
+    winEl.innerHTML = getSortedWinners(winners).map(function(t){
+      var bc = countTicketBingos(t);
+      var trophies = "";
+      if (bc > 0) {
+        for (var i = 0; i < Math.min(bc,3); i++) trophies += "&#127942;";
+      }
+      if (isSerialWinner(t.id)) trophies += "&#127903;&#65039;";
+      var bingoLabel = bc === 1 ? "Bingo" : bc === 2 ? "Doppelbingo" : bc === 3 ? "Dreifachbingo" : bc > 3 ? bc + "x Bingo" : "";
+      var serialLabel = isSerialWinner(t.id) ? "Serien-/Losnummer Gewinn" : "";
+      var label = [bingoLabel, serialLabel].filter(Boolean).join(" + ");
+      var winLines = getWinLines(t);
+      var completedLines2 = getWinLinesArray(t);
+      var wgSize = getWinnerGridSize();
+      var wgMaxWidth = { small: "55%", medium: "75%", large: "95%" }[wgSize] || "55%";
+      var wgGap  = { small: "3px", medium: "4px", large: "5px" }[wgSize] || "3px";
+      var wgFont = { small: "1.5rem", medium: "1.8rem", large: "2.2rem" }[wgSize] || "1.5rem";
+      var wgRadius = { small: "4px", medium: "6px", large: "8px" }[wgSize] || "6px";
+      var wgId = "wgrid-" + t.id;
+      var gridHtml = "<div style='margin-top:8px;'>" +
+        "<div id='" + wgId + "' style='display:grid;grid-template-columns:repeat(5,1fr);gap:" + wgGap + ";position:relative;width:" + wgMaxWidth + ";max-width:100%;margin-left:auto;margin-right:auto;'>";
+      ["B","I","N","G","O"].forEach(function(c){
+        gridHtml += "<div style='aspect-ratio:1;background:#2c394c;color:#fff;font-family:var(--font-head);font-size:" + wgFont + ";letter-spacing:1px;border-radius:" + wgRadius + ";display:flex;align-items:center;justify-content:center;'>" + c + "</div>";
+      });
+      for (var idx2 = 0; idx2 < 25; idx2++) {
+        var val = t.grid[idx2];
+        var isWin = winLines.has(idx2);
+        var isHit = drawnNums.includes(val);
+        var bg = isWin ? hexToRgba(getBingoColor(), getColorOpacity("bingo")) : isHit ? hexToRgba(getHitColor(), getColorOpacity("hit")) : "var(--surface2)";
+        var color = isWin ? "#2c394c" : isHit ? "#2c394c" : "var(--text)";
+        gridHtml += "<div style='aspect-ratio:1;background:" + bg + ";color:" + color + ";border:1px solid var(--border);border-radius:" + wgRadius + ";display:flex;align-items:center;justify-content:center;font-weight:700;font-size:" + wgFont + ";'>" + (val || "") + "</div>";
+      }
+      gridHtml += "<svg id='wsvg-" + t.id + "' style='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:10;'></svg>";
+      gridHtml += "</div></div>";
+
+      var dateText = t.date ? "<div style='font-size:.72rem;color:var(--muted);margin-top:2px;'>" + formatDate(t.date) + "</div>" : "";
+      var infoText = "";
+      if (t.serial || t.lot) {
+        var infoParts = [];
+        if (t.serial) infoParts.push("Serie: " + t.serial);
+        if (t.lot)    infoParts.push("Los: " + t.lot);
+        infoText = "<div style='font-size:.72rem;color:var(--muted);margin-top:2px;'>" + infoParts.join(" · ") + "</div>";
+      }
+
+      return "<div class='winner-item'>" +
+        "<div style='display:flex;align-items:center;gap:10px;width:100%;margin-bottom:8px;'>" +
+          "<div style='flex:1;text-align:left;'><div class='winner-name'>" + t.name + "</div>" +
+          "<div class='winner-sub' style='margin-top:2px;'>" + label + "</div>" +
+          dateText + infoText +
+          "</div>" +
+          "<span class='trophy'>" + trophies + "</span>" +
+        "</div>" + gridHtml +
+        "</div>";
+    }).join("");
+    setTimeout(function() {
+      winners.forEach(function(t) {
+        var lines = getWinLinesArray(t);
+        if (!lines.length) return;
+        var gridEl = document.getElementById("wgrid-" + t.id);
+        var svgEl  = document.getElementById("wsvg-"  + t.id);
+        if (!gridEl || !svgEl) return;
+        function drawWinnerLines() {
+          svgEl.innerHTML = "";
+          var allDivs = gridEl.querySelectorAll("div");
+          var dataCells = Array.prototype.slice.call(allDivs, 5);
+          lines.forEach(function(line) {
+            var c1 = dataCells[line[0]], c2 = dataCells[line[line.length-1]];
+            if (!c1 || !c2) return;
+            var x1 = c1.offsetLeft + c1.offsetWidth/2;
+            var y1 = c1.offsetTop  + c1.offsetHeight/2;
+            var x2 = c2.offsetLeft + c2.offsetWidth/2;
+            var y2 = c2.offsetTop  + c2.offsetHeight/2;
+            var lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            lineEl.setAttribute("x1", x1); lineEl.setAttribute("y1", y1);
+            lineEl.setAttribute("x2", x2); lineEl.setAttribute("y2", y2);
+            lineEl.setAttribute("stroke", getLineColor());
+            lineEl.setAttribute("stroke-width", getLineWidth());
+            lineEl.setAttribute("stroke-linecap", "round");
+            lineEl.setAttribute("opacity", getLineOpacity());
+            svgEl.appendChild(lineEl);
+          });
+        }
+        drawWinnerLines();
+        if (window.ResizeObserver) {
+          var ro = new ResizeObserver(drawWinnerLines);
+          ro.observe(gridEl);
+        }
+      });
+    }, 0);
+  }
+  calcBingoProb();
+}
+
+// ── BINGO POPUP ────────────────────────────────────────
+function showBingoPopup(text, count) {
+  if (!getPopupsEnabled()) return;
+  var n = count || 1;
+  var trophies = "";
+  for (var i = 0; i < Math.min(n, 3); i++) trophies += "&#127942;";
+  document.getElementById("bp-trophy-icons").innerHTML = trophies;
+  var titles = ["BINGO!", "DOPPELBINGO!", "DREIFACHBINGO!", n + "X BINGO!"];
+  document.getElementById("bingo-popup-title").textContent = n <= 3 ? titles[n-1] : titles[3];
+  document.getElementById("bingo-popup-text").textContent = text;
+  document.getElementById("bingo-popup-overlay").classList.add("visible");
+  if (getSoundEnabled()) playBingoSound();
+  launchConfetti();
+  cancelPopupAutoClose();
+  startPopupAutoClose(closeBingoPopup);
+}
+function closeBingoPopup() {
+  cancelPopupAutoClose();
+  document.getElementById("bingo-popup-overlay").classList.remove("visible");
+}
+
+function showSerialPopup(ticketName) {
+  if (!getPopupsEnabled()) return;
+  document.getElementById("serial-popup-text").textContent = "\"" + ticketName + "\" hat einen Serien-/Losnummer-Treffer!";
+  document.getElementById("serial-popup-overlay").classList.add("visible");
+  if (getSoundEnabled()) playBingoSound();
+  launchConfetti();
+  cancelPopupAutoClose();
+  startPopupAutoClose(closeSerialPopup);
+}
+function closeSerialPopup() {
+  cancelPopupAutoClose();
+  document.getElementById("serial-popup-overlay").classList.remove("visible");
+}
+
+// ── HEADER STATS ───────────────────────────────────────
+function getHeaderLabelStyle() {
+  return localStorage.getItem("bingo_hdr_label_style") || "text";
+}
+
+function setHeaderLabelStyle(style) {
+  localStorage.setItem("bingo_hdr_label_style", style);
+  var wrap = document.getElementById("hdr-stats-wrap");
+  if (wrap) wrap.style.display = style === "off" ? "none" : "flex";
+  ["off","text","emoji"].forEach(function(s) {
+    var el = document.getElementById("hdr-label-" + s + "-opt");
+    if (el) el.style.borderColor = style === s ? "#2c394c" : "var(--border)";
+  });
+  updateHeaderStats();
+}
+
+function toggleHeaderStats(show) {
+  localStorage.setItem("bingo_show_header_stats", show ? "1" : "0");
+  var wrap = document.getElementById("hdr-stats-wrap");
+  if (wrap) wrap.style.display = show ? "flex" : "none";
+}
+
+function updateHeaderStats() {
+  syncSerialWinners();
+  var winners = tickets.filter(function(t){ return checkTicketBingo(t) || isSerialWinner(t.id); }).length;
+  var el = function(id){ return document.getElementById(id); };
+  if (el("hdr-tickets")) el("hdr-tickets").textContent = tickets.length;
+  if (el("hdr-drawn"))   el("hdr-drawn").textContent   = drawnNums.length;
+  if (el("hdr-bingos"))  el("hdr-bingos").textContent  = winners;
+  var style = getHeaderLabelStyle();
+  var wrap = document.getElementById("hdr-stats-wrap");
+  if (wrap) wrap.style.display = style === "off" ? "none" : "flex";
+  var tl = el("hdr-tickets-label"); if (tl) tl.innerHTML = style === "emoji" ? "🎟️" : (tickets.length === 1 ? "Schein" : "Scheine");
+  var dl = el("hdr-drawn-label");   if (dl) dl.innerHTML = style === "emoji" ? "🔢" : (drawnNums.length === 1 ? "Gezogen" : "Gezogen");
+  var bl = el("hdr-bingos-label");  if (bl) bl.innerHTML = style === "emoji" ? "🏆" : (winners === 1 ? "Gewinn" : "Gewinne");
+}
+
+// ── CONFIRM MODAL ──────────────────────────────────────
+function showConfirm(text, onOk, okLabel, okStyle) {
+  document.getElementById("confirm-title").innerHTML = "&#9888; Sicher?";
+  document.getElementById("confirm-text").textContent = text;
+  document.getElementById("confirm-overlay").style.display = "flex";
+  var btn = document.getElementById("confirm-ok-btn");
+  btn.innerHTML = okLabel || "&#128465; Löschen";
+  btn.className = okStyle || "btn btn-danger";
+  btn.style.width = "auto";
+  btn.onclick = function(){
+    document.getElementById("confirm-overlay").style.display = "none";
+    onOk();
+  };
+}
+function closeConfirm() {
+  document.getElementById("confirm-overlay").style.display = "none";
+}
+
+// ── TOAST ──────────────────────────────────────────────
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  t.innerHTML = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2500);
+}
+
+// ── SERIEN/LOS PRÜFEN ──────────────────────────────────
+var serialLotEntries = JSON.parse(localStorage.getItem("bingo_serial_lot_entries") || "[]");
+
+function isSerialWinner(id) { return serialWinners.indexOf(id) !== -1; }
+
+function syncSerialWinners() {
+  var newWinners = [];
+  tickets.forEach(function(t) {
+    var matchesEntry = serialLotEntries.some(function(e) {
+      if (!e.serial && !e.lot) return false;
+      var sMatch = e.serial ? String(t.serial) === e.serial : true;
+      var lMatch = e.lot    ? String(t.lot)    === e.lot    : true;
+      return sMatch && lMatch;
+    });
+    if (matchesEntry && serialWinners.indexOf(t.id) === -1) {
+      serialWinners.push(t.id);
+      newWinners.push(t);
+      localStorage.setItem("bingo_serial_winners", JSON.stringify(serialWinners));
+    }
+  });
+  return newWinners;
+}
+
+function addSerialLotEntry() {
+  var serial = document.getElementById("check-serial").value.trim();
+  var lot    = document.getElementById("check-lot").value.trim();
+  if (!serial && !lot) { showToast("&#9888;&#65039; Bitte mindestens eine Nummer eingeben."); return; }
+  serialLotEntries.push({ serial: serial, lot: lot });
+  localStorage.setItem("bingo_serial_lot_entries", JSON.stringify(serialLotEntries));
+  document.getElementById("check-serial").value = "";
+  document.getElementById("check-lot").value = "";
+  var newWinners = syncSerialWinners();
+  renderSerialLotList();
+  updateHeaderStats();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+  if (newWinners.length > 0) {
+    setTimeout(function() {
+      newWinners.forEach(function(t) { showSerialPopup(t.name); });
+    }, 300);
+  }
+}
+
+function confirmRemoveSerialLotEntry(idx) {
+  showConfirm("Diesen Eintrag wirklich löschen?", function() { removeSerialLotEntry(idx); });
+}
+
+function removeSerialLotEntry(idx) {
+  serialLotEntries.splice(idx, 1);
+  localStorage.setItem("bingo_serial_lot_entries", JSON.stringify(serialLotEntries));
+  rebuildSerialWinners();
+  renderSerialLotList();
+  updateHeaderStats();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+function toggleSerialWinner(id) {
+  var idx = serialWinners.indexOf(id);
+  if (idx === -1) { serialWinners.push(id); } else { serialWinners.splice(idx, 1); }
+  localStorage.setItem("bingo_serial_winners", JSON.stringify(serialWinners));
+  updateHeaderStats();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+  renderSerialLotList();
+}
+
+function rebuildSerialWinners() {
+  serialWinners = serialWinners.filter(function(id) {
+    var t = tickets.find(function(t){ return t.id === id; });
+    if (!t) return false;
+    return serialLotEntries.some(function(e) {
+      var sMatch = e.serial ? String(t.serial) === e.serial : true;
+      var lMatch = e.lot    ? String(t.lot)    === e.lot    : true;
+      return sMatch && lMatch;
+    });
+  });
+  localStorage.setItem("bingo_serial_winners", JSON.stringify(serialWinners));
+}
+
+function renderSerialLotList() {
+  syncSerialWinners();
+  var container = document.getElementById("serial-lot-list");
+  if (!container) return;
+  var delBtn = document.getElementById("delete-all-serial-btn");
+  if (delBtn) {
+    delBtn.style.opacity = serialLotEntries.length > 0 ? "1" : "0.4";
+    delBtn.style.cursor = serialLotEntries.length > 0 ? "pointer" : "not-allowed";
+  }
+  if (serialLotEntries.length === 0) {
+    container.innerHTML = "<div style='color:var(--muted);font-size:.82rem;text-align:center;padding:8px 0;'>Es wurde noch keine Serien- und Losnummer geprüft.</div>";
+    return;
+  }
+  container.innerHTML = serialLotEntries.map(function(e, idx) {
+    var matches = tickets.filter(function(t) {
+      var sMatch = e.serial ? String(t.serial) === e.serial : true;
+      var lMatch = e.lot    ? String(t.lot)    === e.lot    : true;
+      return sMatch && lMatch;
+    });
+    var hasMatch = matches.length > 0;
+    var hasWin = matches.some(function(t){ return checkTicketBingo(t) || isSerialWinner(t.id); });
+    var bg = hasWin ? "rgba(139,195,74,.1)" : hasMatch ? "rgba(245,197,66,.1)" : "var(--surface2)";
+    var border = hasWin ? "1px solid rgba(139,195,74,.35)" : hasMatch ? "1px solid rgba(245,197,66,.4)" : "1px solid var(--border)";
+    var icon = hasWin ? "&#127942;" : hasMatch ? "&#128269;" : "&#10060;";
+    var status = hasWin ? "<span style='color:var(--green);font-weight:700;font-size:.78rem;'>Treffer &amp; Gewinn!</span>"
+               : hasMatch ? "<span style='color:#c09000;font-weight:700;font-size:.78rem;'>Treffer gefunden</span>"
+               : "<span style='color:var(--muted);font-size:.78rem;'>Kein Treffer</span>";
+    var label = (e.serial ? "Serie: " + e.serial : "") + (e.serial && e.lot ? "  |  " : "") + (e.lot ? "Los: " + e.lot : "");
+    var matchDetails = hasMatch ? matches.map(function(t){
+      return "<div style='margin-top:6px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.8rem;'>" +
+        "<div style='font-weight:700;'>&#127942; " + t.name + "</div></div>";
+    }).join("") : "";
+    return "<div style='background:" + bg + ";border:" + border + ";border-radius:10px;padding:10px 12px;margin-bottom:8px;'>" +
+      "<div style='display:flex;align-items:center;justify-content:space-between;'>" +
+        "<div><div style='font-weight:700;font-size:.85rem;'>" + label + "</div>" + status + "</div>" +
+        "<div style='display:flex;align-items:center;gap:8px;'>" +
+          "<span style='font-size:1.3rem;'>" + icon + "</span>" +
+          "<button onclick='confirmRemoveSerialLotEntry(" + idx + ")' style='background:none;border:1px solid #2c394c;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:1rem;'>🗑️</button>" +
+        "</div>" +
+      "</div>" + matchDetails + "</div>";
+  }).join("");
+}
+
+function toggleScheinInfo() {
+  var box = document.getElementById("scheine-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+function toggleZahlenInfo() {
+  var box = document.getElementById("zahlen-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+function toggleSerialInfo() {
+  var box = document.getElementById("serial-info-box");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function clearAllSerialLot() {
+  if (serialLotEntries.length === 0) { showToast("Keine Einträge vorhanden."); return; }
+  showConfirm("Wirklich alle Serien- und Losnummern löschen?", function() {
+    serialLotEntries = [];
+    serialWinners = serialWinners.filter(function(id) {
+      return tickets.some(function(t){ return t.id === id && checkTicketBingo(t); });
+    });
+    localStorage.setItem("bingo_serial_lot_entries", JSON.stringify(serialLotEntries));
+    localStorage.setItem("bingo_serial_winners", JSON.stringify(serialWinners));
+    renderSerialLotList();
+    updateHeaderStats();
+    if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+    showToast("🗑️ Alle Einträge gelöscht.");
+  });
+}
+
+function checkSerialLot() { renderSerialLotList(); }
+function clearSerialLot() {
+  document.getElementById("check-serial").value = "";
+  document.getElementById("check-lot").value = "";
+}
+
+// ── REIHENFOLGE TOGGLE ─────────────────────────────────
+function getShowOrderNumbers() { return localStorage.getItem("bingo_show_order_btn") === "1"; }
+function getSortDrawnNums()    { return localStorage.getItem("bingo_show_sort_btn")   === "1"; }
+function getDisplayDrawnNums() {
+  if (getSortDrawnNums()) return drawnNums.slice().sort(function(a,b){ return a-b; });
+  return drawnNums;
+}
+
+// ── EINSTELLUNGEN ──────────────────────────────────────
+var DEFAULT_BINGO_COLOR = "#8bc34a";
+var DEFAULT_HIT_COLOR   = "#ffff00";
+var DEFAULT_DRAWN_COLOR = "#ffff00";
+
+function toggleLastDrawn(show) {
+  localStorage.setItem("bingo_show_last_drawn", show ? "1" : "0");
+  setRadio("last-drawn-style", show ? "on" : "off", ["last-drawn-off-opt","last-drawn-on-opt"]);
+  var bar = document.getElementById("last-drawn-bar");
+  if (bar) bar.style.display = show ? "flex" : "none";
+}
+
+function saveConfirmDraw(val) {
+  localStorage.setItem("bingo_confirm_draw", val ? "1" : "0");
+  setRadio("confirm-draw-style", val ? "on" : "off", ["confirm-draw-off-opt","confirm-draw-on-opt"]);
+}
+function getConfirmDraw() { return localStorage.getItem("bingo_confirm_draw") === "1"; }
+
+function resetAllData() {
+  showConfirm("Wirklich ALLE Daten löschen? Scheine, Zahlen, Einstellungen — alles wird zurückgesetzt.", function() {
+    localStorage.clear();
+    tickets = []; drawnNums = []; serialWinners = []; serialLotEntries = [];
+    initDefaults();
+    location.reload();
+  });
+}
+
+function renderStorageInfo() {
+  var statsEl = document.getElementById("storage-stats");
+  var pathEl  = document.getElementById("storage-path");
+  if (!statsEl) return;
+
+  var keys = [
+    { key: "bingo_tickets",            label: "🎟️ Scheine",         parse: true },
+    { key: "bingo_drawn",              label: "🔢 Gezogene Zahlen",  parse: true },
+    { key: "bingo_serial_lot_entries", label: "🔍 Geprüfte Nummern", parse: true },
+  ];
+
+  var totalBytes = 0;
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith("bingo_")) {
+      totalBytes += (localStorage.getItem(k) || "").length * 2;
+    }
+  }
+
+  var html = keys.map(function(item) {
+    var raw = localStorage.getItem(item.key);
+    var count = 0;
+    try { count = raw ? JSON.parse(raw).length : 0; } catch(e) {}
+    return "<div style='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;'>" +
+      "<div style='font-family:var(--font-head);font-size:1.6rem;color:var(--accent);line-height:1;'>" + count + "</div>" +
+      "<div style='font-size:.72rem;color:var(--muted);margin-top:4px;font-weight:700;'>" + item.label + "</div>" +
+    "</div>";
+  }).join("");
+
+  html += "<div style='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;'>" +
+    "<div style='font-family:var(--font-head);font-size:1.6rem;color:var(--accent);line-height:1;'>" + (totalBytes < 1024 ? totalBytes + "B" : Math.round(totalBytes/1024) + "KB") + "</div>" +
+    "<div style='font-size:.72rem;color:var(--muted);margin-top:4px;font-weight:700;'>💾 Speichernutzung</div>" +
+  "</div>";
+
+  statsEl.innerHTML = html;
+  if (pathEl) pathEl.innerHTML = "📍 Gespeicherort: <strong>Browser localStorage</strong> · " + window.location.hostname + (window.location.pathname !== "/" ? window.location.pathname : "");
+}
+
+function loadSettings() {
+  var bc = localStorage.getItem("bingo_color") || DEFAULT_BINGO_COLOR;
+  var hc = localStorage.getItem("hit_color")   || DEFAULT_HIT_COLOR;
+  var dc = localStorage.getItem("drawn_color") || DEFAULT_DRAWN_COLOR;
+  var bcInput = document.getElementById("setting-bingo-color");
+  var hcInput = document.getElementById("setting-hit-color");
+  var dcInput = document.getElementById("setting-drawn-color");
+  ["bingo","drawn","hit"].forEach(function(key) {
+    var op = parseFloat(localStorage.getItem("bingo_" + key + "_opacity") || 0);
+    var sl = document.getElementById("setting-" + key + "-opacity");
+    var lb = document.getElementById("setting-" + key + "-opacity-val");
+    var pr = document.getElementById("preview-" + key);
+    if (sl) sl.value = op;
+    if (lb) lb.textContent = op + "%";
+    if (pr) {
+      var ci = document.getElementById("setting-" + key + "-color");
+      var hex = ci ? ci.value : "#ffffff";
+      pr.style.background = hexToRgba(hex, 1 - op / 100);
+    }
+  });
+  var lineColor = getLineColor();
+  var lineOpacity = parseFloat(localStorage.getItem("bingo_line_opacity") || DEFAULT_LINE_OPACITY);
+  var lcInput = document.getElementById("setting-line-color");
+  var loInput = document.getElementById("setting-line-opacity");
+  if (lcInput) { lcInput.value = lineColor; document.getElementById("setting-line-color-val").textContent = lineColor; }
+  if (loInput) { loInput.value = lineOpacity; document.getElementById("setting-line-opacity-val").textContent = lineOpacity + "%"; }
+  var lineWidth = getLineWidth();
+  var lwInput = document.getElementById("setting-line-width");
+  if (lwInput) { lwInput.value = lineWidth; document.getElementById("setting-line-width-val").textContent = lineWidth + "px"; }
+  var showLastDrawn = localStorage.getItem("bingo_show_last_drawn");
+  var lastDrawnOn = showLastDrawn === null ? true : showLastDrawn === "1";
+  toggleLastDrawn(lastDrawnOn);
+  setRadio("last-drawn-style", lastDrawnOn ? "on" : "off", ["last-drawn-off-opt","last-drawn-on-opt"]);
+  var confirmOn = getConfirmDraw();
+  setRadio("confirm-draw-style", confirmOn ? "on" : "off", ["confirm-draw-off-opt","confirm-draw-on-opt"]);
+  var toastDrawOn = getToastDraw();
+  setRadio("toast-draw-style", toastDrawOn ? "on" : "off", ["toast-draw-off-opt","toast-draw-on-opt"]);
+  var showOrderBtn = localStorage.getItem("bingo_show_order_btn") === "1";
+  var showSortBtn  = localStorage.getItem("bingo_show_sort_btn")  === "1";
+  var winnerSortOn = getWinnerSortEnabled();
+  toggleOrderBtn(showOrderBtn);
+  toggleSortBtn(showSortBtn);
+  setRadio("order-btn-style",   showOrderBtn ? "on" : "off", ["order-btn-off-opt","order-btn-on-opt"]);
+  setRadio("sort-btn-style",    showSortBtn  ? "on" : "off", ["sort-btn-off-opt","sort-btn-on-opt"]);
+  setRadio("winner-sort-style", winnerSortOn ? "on" : "off", ["winner-sort-off-opt","winner-sort-on-opt"]);
+  var winSummaryOn = getWinSummaryEnabled();
+  setRadio("win-summary-style", winSummaryOn ? "on" : "off", ["win-summary-off-opt","win-summary-on-opt"]);
+  var wgSize = getWinnerGridSize();
+  setRadio("winnergrid-style", wgSize, ["winnergrid-small-opt","winnergrid-medium-opt","winnergrid-large-opt"]);
+  var soundOn = getSoundEnabled();
+  setRadio("sound-style", soundOn ? "on" : "off", ["sound-off-opt","sound-on-opt"]);
+  if (bcInput) { bcInput.value = bc; document.getElementById("setting-bingo-color-val").textContent = bc; document.getElementById("preview-bingo").style.background = bc; }
+  if (hcInput) { hcInput.value = hc; document.getElementById("setting-hit-color-val").textContent = hc; document.getElementById("preview-hit").style.background = hc; }
+  if (dcInput) { dcInput.value = dc; document.getElementById("setting-drawn-color-val").textContent = dc; document.getElementById("preview-drawn").style.background = dc; }
+  var hdrStyle = getHeaderLabelStyle();
+  var radios = document.querySelectorAll("input[name='hdr-label-style']");
+  radios.forEach(function(r){ if (r.value === hdrStyle) r.checked = true; });
+  setHeaderLabelStyle(hdrStyle);
+  var slowFadeOn = getSlowFade();
+  setRadio("slowfade-style", slowFadeOn ? "on" : "off", ["slowfade-off-opt","slowfade-on-opt"]);
+  var dmOn = getDarkMode();
+  setRadio("darkmode-style", dmOn ? "on" : "off", ["darkmode-off-opt","darkmode-on-opt"]);
+  document.body.classList.toggle("dark-mode", dmOn);
+  var confettiOn = getConfettiEnabled();
+  setRadio("confetti-style", confettiOn ? "on" : "off", ["confetti-off-opt","confetti-on-opt"]);
+  var popupsOn = getPopupsEnabled();
+  setRadio("popups-style", popupsOn ? "on" : "off", ["popups-off-opt","popups-on-opt"]);
+  var autoClose = getPopupAutoClose();
+  var acIds = ["popup-close-off-opt","popup-close-3-opt","popup-close-5-opt","popup-close-10-opt"];
+  acIds.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.borderColor = "var(--border)"; });
+  var acActiveId = autoClose === 0 ? "popup-close-off-opt" : "popup-close-" + autoClose + "-opt";
+  var acActiveEl = document.getElementById(acActiveId);
+  if (acActiveEl) acActiveEl.style.borderColor = "#2c394c";
+  var acRadios = document.querySelectorAll("input[name='popup-close-style']");
+  acRadios.forEach(function(r){ if (parseInt(r.value) === autoClose) r.checked = true; });
+  var autoNumOn = getAutoNumber();
+  setRadio("autonumber-style", autoNumOn ? "on" : "off", ["autonumber-off-opt","autonumber-on-opt"]);
+  var maxDraw = getMaxDraw();
+  var mdSlider = document.getElementById("setting-max-draw");
+  var mdVal = document.getElementById("max-draw-val");
+  if (mdSlider) mdSlider.value = maxDraw;
+  if (mdVal) mdVal.textContent = maxDraw;
+  var autoNavOn = getAutoNav();
+  setRadio("autonav-style", autoNavOn ? "on" : "off", ["autonav-off-opt","autonav-on-opt"]);
+  var mgSize = getMiniGridSize();
+  setRadio("minigrid-style", mgSize, ["minigrid-small-opt","minigrid-medium-opt","minigrid-large-opt"]);
+  applyMiniGridSize(mgSize);
+  setHeaderSize(getHeaderSize());
+  setNavSize(getNavSize());
+}
+
+function setRadio(name, value, optIds) {
+  var radios = document.querySelectorAll("input[name='" + name + "']");
+  radios.forEach(function(r){ if (r.value === value) r.checked = true; });
+  optIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var isActive = id.endsWith("-" + value + "-opt");
+    el.style.borderColor = isActive ? "#2c394c" : "var(--border)";
+  });
+}
+
+function applyBingoColor(val) {
+  localStorage.setItem("bingo_color", val);
+  document.getElementById("setting-bingo-color-val").textContent = val;
+  document.getElementById("preview-bingo").style.background = val;
+  updateColorStyles();
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+function applyHitColor(val) {
+  localStorage.setItem("hit_color", val);
+  document.getElementById("setting-hit-color-val").textContent = val;
+  document.getElementById("preview-hit").style.background = val;
+  updateColorStyles();
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+function resetBingoColor() {
+  applyBingoColor(DEFAULT_BINGO_COLOR);
+  document.getElementById("setting-bingo-color").value = DEFAULT_BINGO_COLOR;
+}
+function resetHitColor() {
+  applyHitColor(DEFAULT_HIT_COLOR);
+  document.getElementById("setting-hit-color").value = DEFAULT_HIT_COLOR;
+}
+
+function applyDrawnColor(val) {
+  localStorage.setItem("drawn_color", val);
+  var el = document.getElementById("setting-drawn-color-val");
+  var pr = document.getElementById("preview-drawn");
+  if (el) el.textContent = val;
+  if (pr) pr.style.background = val;
+  updateColorStyles();
+}
+function resetDrawnColor() {
+  applyDrawnColor(DEFAULT_DRAWN_COLOR);
+  var inp = document.getElementById("setting-drawn-color");
+  if (inp) inp.value = DEFAULT_DRAWN_COLOR;
+}
+function getDrawnColor() { return localStorage.getItem("drawn_color") || DEFAULT_DRAWN_COLOR; }
+
+var DEFAULT_LINE_COLOR   = "#db2523";
+var DEFAULT_LINE_OPACITY = 0;
+
+function getLineColor()   { return localStorage.getItem("bingo_line_color")   || DEFAULT_LINE_COLOR; }
+function getLineOpacity() { return (1 - parseFloat(localStorage.getItem("bingo_line_opacity") || DEFAULT_LINE_OPACITY) / 100).toFixed(2); }
+
+function applyLineColor(val) {
+  localStorage.setItem("bingo_line_color", val);
+  var el = document.getElementById("setting-line-color-val");
+  if (el) el.textContent = val;
+  var pr = document.querySelector("#preview-line line");
+  if (pr) pr.setAttribute("stroke", val);
+  refreshBingoLines();
+}
+
+function hexToRgba(hex, alpha) {
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+
+function getColorOpacity(key) {
+  return 1 - (parseFloat(localStorage.getItem("bingo_" + key + "_opacity") || 0) / 100);
+}
+
+function applyColorOpacity(key, val) {
+  localStorage.setItem("bingo_" + key + "_opacity", val);
+  var el = document.getElementById("setting-" + key + "-opacity-val");
+  if (el) el.textContent = val + "%";
+  var preview = document.getElementById("preview-" + key);
+  if (preview) {
+    var colorInput = document.getElementById("setting-" + key + "-color");
+    var hex = colorInput ? colorInput.value : "#ffffff";
+    preview.style.background = hexToRgba(hex, 1 - val / 100);
+  }
+  updateColorStyles();
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+var DEFAULT_LINE_WIDTH = 3;
+function getLineWidth() { return parseFloat(localStorage.getItem("bingo_line_width") || DEFAULT_LINE_WIDTH); }
+
+function applyLineWidth(val) {
+  localStorage.setItem("bingo_line_width", val);
+  var el = document.getElementById("setting-line-width-val");
+  if (el) el.textContent = val + "px";
+  var prLine = document.querySelector("#preview-line line");
+  if (prLine) prLine.setAttribute("stroke-width", val);
+  refreshBingoLines();
+}
+
+function applyLineOpacity(val) {
+  localStorage.setItem("bingo_line_opacity", val);
+  var el = document.getElementById("setting-line-opacity-val");
+  if (el) el.textContent = val + "%";
+  var prLine = document.querySelector("#preview-line line");
+  if (prLine) prLine.setAttribute("opacity", 1 - val / 100);
+  refreshBingoLines();
+}
+
+function resetLineColor() {
+  applyLineColor(DEFAULT_LINE_COLOR);
+  var inp = document.getElementById("setting-line-color");
+  if (inp) inp.value = DEFAULT_LINE_COLOR;
+}
+
+function refreshBingoLines() {
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+function getBingoColor() { return localStorage.getItem("bingo_color") || DEFAULT_BINGO_COLOR; }
+function getHitColor()   { return localStorage.getItem("hit_color")   || DEFAULT_HIT_COLOR; }
+
+function updateColorStyles() {
+  var bc = getBingoColor();
+  var hc = getHitColor();
+  var dc = getDrawnColor();
+  var style = document.getElementById("dynamic-colors");
+  if (!style) { style = document.createElement("style"); style.id = "dynamic-colors"; document.head.appendChild(style); }
+  var bingoOp = getColorOpacity("bingo");
+  var hitOp   = getColorOpacity("hit");
+  var drawnOp = getColorOpacity("drawn");
+  var bcRgba = hexToRgba(bc, bingoOp);
+  var hcRgba = hexToRgba(hc, hitOp);
+  var dcRgba = hexToRgba(dc, drawnOp);
+  style.textContent = ".ticket-mini-cell.bingo-line{background:" + bcRgba + "!important;border-color:" + bc + "!important;color:#2c394c!important;}" +
+    ".ticket-mini-cell.hit{background:" + hcRgba + "!important;border-color:#cccc00!important;color:#2c394c!important;}" +
+    ".num-btn.drawn.b,.num-btn.drawn.i,.num-btn.drawn.n,.num-btn.drawn.g,.num-btn.drawn.o{background:" + dcRgba + "!important;color:#2c394c!important;}";
+}
+
+function setHeaderSize(size) {
+  localStorage.setItem("bingo_header_size", size);
+  setRadio("header-size-style", size, ["header-size-normal-opt","header-size-compact-opt"]);
+  var header = document.getElementById("header");
+  if (!header) return;
+  if (size === "compact") {
+    header.style.padding = "6px 16px";
+    var h1 = header.querySelector("h1");
+    if (h1) h1.style.fontSize = "1rem";
+    document.querySelectorAll("#hdr-stats-wrap > div > div:first-child").forEach(function(el){ el.style.fontSize = ".9rem"; });
+  } else {
+    header.style.padding = "14px 20px 10px";
+    var h1 = header.querySelector("h1");
+    if (h1) h1.style.fontSize = "";
+    document.querySelectorAll("#hdr-stats-wrap > div > div:first-child").forEach(function(el){ el.style.fontSize = ""; });
+  }
+}
+function getHeaderSize() { return localStorage.getItem("bingo_header_size") || "normal"; }
+
+function setNavSize(size) {
+  localStorage.setItem("bingo_nav_size", size);
+  setRadio("nav-size-style", size, ["nav-size-normal-opt","nav-size-compact-opt"]);
+  var h = size === "compact" ? "50px" : "68px";
+  document.documentElement.style.setProperty("--nav-h", h);
+  document.querySelectorAll(".nav-btn .icon").forEach(function(el){
+    el.style.fontSize = size === "compact" ? "1.1rem" : "1.5rem";
+  });
+  document.querySelectorAll(".nav-btn").forEach(function(el){
+    el.style.fontSize = size === "compact" ? ".6rem" : ".68rem";
+    el.style.gap = size === "compact" ? "2px" : "4px";
+  });
+}
+function getNavSize() { return localStorage.getItem("bingo_nav_size") || "normal"; }
+
+function setSlowFade(on) {
+  localStorage.setItem("bingo_slow_fade", on ? "1" : "0");
+  document.body.classList.toggle("slow-fade", on);
+  setRadio("slowfade-style", on ? "on" : "off", ["slowfade-off-opt","slowfade-on-opt"]);
+}
+function getSlowFade() { return localStorage.getItem("bingo_slow_fade") === "1"; }
+
+function setDarkMode(on) {
+  localStorage.setItem("bingo_dark_mode", on ? "1" : "0");
+  document.body.classList.toggle("dark-mode", on);
+  setRadio("darkmode-style", on ? "on" : "off", ["darkmode-off-opt","darkmode-on-opt"]);
+  checkGridValid();
+}
+function getDarkMode() { return localStorage.getItem("bingo_dark_mode") === "1"; }
+
+function saveConfettiSetting(val) {
+  localStorage.setItem("bingo_confetti", val ? "1" : "0");
+  setRadio("confetti-style", val ? "on" : "off", ["confetti-off-opt","confetti-on-opt"]);
+}
+function getConfettiEnabled() { return localStorage.getItem("bingo_confetti") !== "0"; }
+
+function launchConfetti() {
+  if (!getConfettiEnabled()) return;
+  var canvas = document.getElementById("confetti-canvas");
+  if (!canvas) return;
+  canvas.style.display = "block";
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var ctx = canvas.getContext("2d");
+  var pieces = [];
+  var colors = ["#ff6b6b","#ffd93d","#6bcb77","#4d96ff","#ff922b","#cc5de8"];
+  for (var i = 0; i < 120; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width, y: Math.random() * -canvas.height,
+      w: Math.random() * 10 + 5, h: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360, vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 4 + 2, vr: (Math.random() - 0.5) * 6
+    });
+  }
+  var frame = 0, maxFrames = 180;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(function(p) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    });
+    frame++;
+    if (frame < maxFrames) requestAnimationFrame(draw);
+    else { canvas.style.display = "none"; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  }
+  draw();
+}
+
+function savePopupSetting(val) {
+  localStorage.setItem("bingo_popups", val ? "1" : "0");
+  setRadio("popups-style", val ? "on" : "off", ["popups-off-opt","popups-on-opt"]);
+}
+function getPopupsEnabled() { var v = localStorage.getItem("bingo_popups"); return v === null ? true : v === "1"; }
+
+function savePopupAutoClose(secs) {
+  localStorage.setItem("bingo_popup_autoclose", secs);
+  var ids = ["popup-close-off-opt","popup-close-3-opt","popup-close-5-opt","popup-close-10-opt"];
+  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.borderColor = "var(--border)"; });
+  var activeId = secs === 0 ? "popup-close-off-opt" : "popup-close-" + secs + "-opt";
+  var activeEl = document.getElementById(activeId);
+  if (activeEl) activeEl.style.borderColor = "#2c394c";
+}
+function getPopupAutoClose() { return parseInt(localStorage.getItem("bingo_popup_autoclose") || 0); }
+
+var _popupAutoCloseTimer = null;
+function startPopupAutoClose(closeFn) {
+  var secs = getPopupAutoClose();
+  if (!secs) return;
+  _popupAutoCloseTimer = setTimeout(closeFn, secs * 1000);
+}
+function cancelPopupAutoClose() {
+  if (_popupAutoCloseTimer) { clearTimeout(_popupAutoCloseTimer); _popupAutoCloseTimer = null; }
+}
+
+function saveMaxDraw(val) {
+  localStorage.setItem("bingo_max_draw", val);
+  var el = document.getElementById("max-draw-val");
+  if (el) el.textContent = val;
+}
+function getMaxDraw() { return parseInt(localStorage.getItem("bingo_max_draw") || 22); }
+
+function saveAutoNav(val) {
+  localStorage.setItem("bingo_auto_nav", val ? "1" : "0");
+  setRadio("autonav-style", val ? "on" : "off", ["autonav-off-opt","autonav-on-opt"]);
+}
+function getAutoNav() { var v = localStorage.getItem("bingo_auto_nav"); return v === null ? true : v === "1"; }
+
+function saveToastDraw(val) {
+  localStorage.setItem("bingo_toast_draw", val ? "1" : "0");
+  setRadio("toast-draw-style", val ? "on" : "off", ["toast-draw-off-opt","toast-draw-on-opt"]);
+}
+function getToastDraw() { var v = localStorage.getItem("bingo_toast_draw"); return v === null ? true : v === "1"; }
+
+function saveAutoNumber(val) {
+  localStorage.setItem("bingo_auto_number", val ? "1" : "0");
+  setRadio("autonumber-style", val ? "on" : "off", ["autonumber-off-opt","autonumber-on-opt"]);
+}
+function getAutoNumber() { var v = localStorage.getItem("bingo_auto_number"); return v === null ? true : v === "1"; }
+
+function saveWinnerGridSize(size) {
+  localStorage.setItem("bingo_winnergrid_size", size);
+  setRadio("winnergrid-style", size, ["winnergrid-small-opt","winnergrid-medium-opt","winnergrid-large-opt"]);
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+function getWinnerGridSize() { return localStorage.getItem("bingo_winnergrid_size") || "medium"; }
+
+function saveMiniGridSize(size) {
+  localStorage.setItem("bingo_minigrid_size", size);
+  setRadio("minigrid-style", size, ["minigrid-small-opt","minigrid-medium-opt","minigrid-large-opt"]);
+  applyMiniGridSize(size);
+  if (document.getElementById("page-scheine").classList.contains("active")) { renderScheine(); setTimeout(resizeMiniGrids, 50); }
+}
+function getMiniGridSize() { return localStorage.getItem("bingo_minigrid_size") || "medium"; }
+function applyMiniGridSize(size) {
+  if (document.getElementById("page-scheine").classList.contains("active")) renderScheine();
+}
+
+function toggleWinSummary(show) {
+  localStorage.setItem("bingo_win_summary", show ? "1" : "0");
+  setRadio("win-summary-style", show ? "on" : "off", ["win-summary-off-opt","win-summary-on-opt"]);
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+function getWinSummaryEnabled() { var v = localStorage.getItem("bingo_win_summary"); return v === null ? true : v === "1"; }
+
+function toggleWinnerSortBtn(show) {
+  localStorage.setItem("bingo_show_winner_sort", show ? "1" : "0");
+  setRadio("winner-sort-style", show ? "on" : "off", ["winner-sort-off-opt","winner-sort-on-opt"]);
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+function getWinnerSortEnabled() { return localStorage.getItem("bingo_show_winner_sort") === "1"; }
+
+function toggleOrderBtn(show) {
+  localStorage.setItem("bingo_show_order_btn", show ? "1" : "0");
+  setRadio("order-btn-style", show ? "on" : "off", ["order-btn-off-opt","order-btn-on-opt"]);
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+function toggleSortBtn(show) {
+  localStorage.setItem("bingo_show_sort_btn", show ? "1" : "0");
+  setRadio("sort-btn-style", show ? "on" : "off", ["sort-btn-off-opt","sort-btn-on-opt"]);
+  if (document.getElementById("page-uebersicht").classList.contains("active")) renderUebersicht();
+}
+
+function saveSoundSetting(val) {
+  localStorage.setItem("bingo_sound", val ? "1" : "0");
+  setRadio("sound-style", val ? "on" : "off", ["sound-off-opt","sound-on-opt"]);
+}
+function getSoundEnabled() { var v = localStorage.getItem("bingo_sound"); return v === null ? true : v === "1"; }
+
+function playBingoSound() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var notes = [
+      {freq:523,start:0.0,dur:.15},{freq:659,start:.15,dur:.15},
+      {freq:784,start:.30,dur:.15},{freq:1047,start:.45,dur:.35},
+      {freq:784,start:.50,dur:.15},{freq:1047,start:.65,dur:.50}
+    ];
+    notes.forEach(function(n) {
+      var osc = ctx.createOscillator(); var gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = n.freq; osc.type = "sine";
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + n.start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.start + n.dur);
+      osc.start(ctx.currentTime + n.start); osc.stop(ctx.currentTime + n.start + n.dur + 0.05);
+    });
+  } catch(e) {}
+}
+
+function saveScreenshotSettings() {
+  var s = {};
+  var allIds = ['stats'].concat(UEBERSICHT_CARDS.map(function(c){ return c.id; }));
+  allIds.forEach(function(id) {
+    var el = document.getElementById("ss-show-" + id);
+    s[id] = el ? el.checked : true;
+  });
+  localStorage.setItem("bingo_screenshot_settings", JSON.stringify(s));
+}
+function loadScreenshotSettings() {
+  var def = {stats:true,drawn:true,prob:true,winners:true};
+  try { return JSON.parse(localStorage.getItem("bingo_screenshot_settings")) || def; } catch(e){ return def; }
+}
+function applyScreenshotCheckboxes() {
+  var s = loadScreenshotSettings();
+  var container = document.getElementById("screenshot-cards-list");
+  if (!container) return;
+  var allCards = [{ id: 'stats', label: '📊 Statistik' }].concat(
+    getUebersichtOrder().map(function(id) {
+      return UEBERSICHT_CARDS.find(function(c){ return c.id === id; });
+    }).filter(Boolean)
+  );
+  container.innerHTML = allCards.map(function(card) {
+    var checked = s[card.id] !== false ? "checked" : "";
+    return "<label style='display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;font-weight:600;'>" +
+      "<input type='checkbox' id='ss-show-" + card.id + "' onchange='saveScreenshotSettings()' " + checked + " style='accent-color:#2c394c;width:16px;height:16px;'> " + card.label +
+      "</label>";
+  }).join("");
+}
+
+function showScreenshotModal() {
+  buildUebersichtCards();
+  renderUebersicht();
+  var page = document.getElementById("page-uebersicht");
+  if (!page) return;
+  var clone = page.cloneNode(true);
+  clone.style.cssText = "display:block;padding:16px;width:700px;box-sizing:border-box;";
+  var ss = loadScreenshotSettings();
+  clone.querySelectorAll("[data-card-id]").forEach(function(c) {
+    var id = c.getAttribute("data-card-id");
+    if (id === "stats"   && !ss.stats)   c.style.display = "none";
+    if (id === "drawn"   && !ss.drawn)   c.style.display = "none";
+    if (id === "prob"    && !ss.prob)    c.style.display = "none";
+    if (id === "winners" && !ss.winners) c.style.display = "none";
+  });
+  var old = document.getElementById("screenshot-modal");
+  if (old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "screenshot-modal";
+  modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  var inner = document.createElement("div");
+  inner.style.cssText = "background:var(--bg);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;max-height:95vh;max-width:95vw;";
+  var header = document.createElement("div");
+  header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;";
+  header.innerHTML = "<span style='font-weight:800;font-size:.9rem;color:var(--text);'>📸 Screenshot-Ansicht · Zoomed auf Bildschirm</span>" +
+    "<button onclick='document.getElementById(\"screenshot-modal\").remove()' style='background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;'>✕ Schließen</button>";
+  var wrapper = document.createElement("div");
+  wrapper.style.cssText = "overflow:auto;flex:1;display:flex;justify-content:center;align-items:flex-start;padding:16px;";
+  var contentWrap = document.createElement("div");
+  contentWrap.style.cssText = "transform-origin:top center;";
+  contentWrap.appendChild(clone);
+  wrapper.appendChild(contentWrap);
+  inner.appendChild(header);
+  inner.appendChild(wrapper);
+  modal.appendChild(inner);
+  document.body.appendChild(modal);
+  setTimeout(function() {
+    var availW = inner.offsetWidth - 32;
+    var availH = inner.offsetHeight - header.offsetHeight - 32;
+    var contentW = 700;
+    var contentH = clone.scrollHeight;
+    var scaleW = availW / contentW;
+    var scaleH = availH / contentH;
+    var scale = Math.min(scaleW, scaleH, 1);
+    contentWrap.style.transform = "scale(" + scale + ")";
+    contentWrap.style.width = contentW + "px";
+    contentWrap.style.height = (contentH * scale) + "px";
+    var winners = tickets.filter(function(t){ return checkTicketBingo(t) || isSerialWinner(t.id); });
+    winners.forEach(function(t) {
+      var lines = getWinLinesArray(t);
+      if (!lines.length) return;
+      var gridEl = clone.querySelector("#wgrid-" + t.id);
+      var svgEl  = clone.querySelector("#wsvg-"  + t.id);
+      if (!gridEl || !svgEl) return;
+      svgEl.innerHTML = "";
+      var allDivs = gridEl.querySelectorAll("div");
+      var dataCells = Array.prototype.slice.call(allDivs, 5);
+      lines.forEach(function(line) {
+        var c1 = dataCells[line[0]], c2 = dataCells[line[line.length-1]];
+        if (!c1 || !c2) return;
+        var x1 = c1.offsetLeft + c1.offsetWidth/2;
+        var y1 = c1.offsetTop  + c1.offsetHeight/2;
+        var x2 = c2.offsetLeft + c2.offsetWidth/2;
+        var y2 = c2.offsetTop  + c2.offsetHeight/2;
+        var lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        lineEl.setAttribute("x1", x1); lineEl.setAttribute("y1", y1);
+        lineEl.setAttribute("x2", x2); lineEl.setAttribute("y2", y2);
+        lineEl.setAttribute("stroke", getLineColor());
+        lineEl.setAttribute("stroke-width", getLineWidth());
+        lineEl.setAttribute("stroke-linecap", "round");
+        lineEl.setAttribute("opacity", getLineOpacity());
+        svgEl.appendChild(lineEl);
+      });
+    });
+  }, 100);
+}
+
+// ── INIT ───────────────────────────────────────────────
+function initDefaults() {
+  // Wird nur gesetzt wenn der Key noch NIE gespeichert wurde
+  var defaults = {
+    "bingo_header_size":        "normal",
+    "bingo_nav_size":           "normal",
+    "bingo_hdr_label_style":    "emoji",
+    "bingo_dark_mode":          "0",
+    "bingo_slow_fade":          "0",
+    "bingo_confetti":           "1",
+    "bingo_popups":             "1",
+    "bingo_popup_autoclose":    "5",
+    "bingo_sound":              "1",
+    "bingo_auto_number":        "1",
+    "bingo_minigrid_size":      "medium",
+    "bingo_color":              "#8bc34a",
+    "hit_color":                "#ffff00",
+    "drawn_color":              "#ffff00",
+    "bingo_line_color":         "#db2523",
+    "bingo_line_width":         "3",
+    "bingo_line_opacity":       "0",
+    "bingo_bingo_opacity":      "0",
+    "bingo_hit_opacity":        "0",
+    "bingo_drawn_opacity":      "0",
+    "bingo_show_order_btn":     "0",
+    "bingo_show_sort_btn":      "0",
+    "bingo_win_summary":        "1",
+    "bingo_show_winner_sort":   "0",
+    "bingo_winnergrid_size":    "medium",
+    "bingo_show_last_drawn":    "1",
+    "bingo_confirm_draw":       "0",
+    "bingo_toast_draw":         "1",
+    "bingo_auto_nav":           "1",
+    "bingo_max_draw":           "22",
+    "bingo_show_header_stats":  "1",
+  };
+  Object.keys(defaults).forEach(function(key) {
+    if (localStorage.getItem(key) === null) {
+      localStorage.setItem(key, defaults[key]);
+    }
+  });
+}
+initDefaults();
+window.addEventListener("load", function() {
+  updateColorStyles();
+  buildBingoInputGrid(Array(25).fill(""));
+  buildUebersichtCards();
+  renderUebersicht();
+  renderScheine();
+  buildNumbersGrid();
+  renderSerialLotList();
+  document.getElementById("ticket-name").value = getAutoNumber() ? "Schein " + (tickets.length + 1) : "";
+  document.getElementById("ticket-date").value = getSundayOfCurrentWeek();
+  updateHeaderStats();
+  if (getDarkMode()) document.body.classList.add("dark-mode");
+  if (getSlowFade()) document.body.classList.add("slow-fade");
+  loadSettings();
+  ["ticket-serial","ticket-lot","ticket-name"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("input", checkGridValid);
+  });
+  setTimeout(function() {
+    resizeBingoGrid();
+    checkGridValid();
+    buildNumbersGrid();
+  }, 300);
+});
+</script>
+</body>
+</html>
